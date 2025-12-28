@@ -1,0 +1,22 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# XAMPP / Local
+.env
+.env.local
+.env.production
+config.local.php
+
+# PHP
+/vendor/
+
+# Logs
+*.log
+
+# Node (por si acaso)
+node_modules/
+
+# IDE
+.vscode/
+.idea/

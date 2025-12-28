@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="inicio.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">Admin</div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" id="menu-dashboard"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="#" class="nav-item" id="menu-usuarios"><i class="fas fa-inbox"></i> Usuarios registrados</a>
+      <a href="#" class="nav-item" id="menu-maratones"><i class="fas fa-image"></i> Maratones</a>
+      <a href="#" class="nav-item"><i class="fas fa-chart-area"></i> Charts</a>
+      <a href="#" class="nav-item"><i class="fas fa-code"></i> Short Codes</a>
+      <a href="#" class="nav-item"><i class="fas fa-exclamation-circle"></i> Error Page</a>
+      <a href="#" class="nav-item"><i class="fas fa-table"></i> Tables</a>
+      <a href="#" class="nav-item"><i class="fas fa-map"></i> Maps</a>
+      <a href="#" class="nav-item"><i class="fas fa-file-alt"></i> Pages</a>
+      <a href="#" class="nav-item"><i class="fas fa-pen"></i> Forms</a>
+
+      <!-- LOGOUT -->
+      <a href="#" class="nav-item" id="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content" id="main-content">
+    <h1>Bienvenido al Panel de Administración</h1>
+  </main>
+
+  <script>
+  // ======================================================
+  // 🔐 PROTECCIÓN DE SESIÓN (SI NO HAY LOGIN → REDIRECT)
+  // ======================================================
+  (async () => {
+    try {
+      const res = await fetch('/public_html/api/me.php', {
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        window.location.href = './index.html';
+      }
+    } catch (e) {
+      window.location.href = './index.html';
+    }
+  })();
+
+  // ======================================================
+  // LOGOUT
+  // ======================================================
+  document.getElementById('btn-logout')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      await fetch('/public_html/api/logout.php', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } finally {
+      window.location.href = './index.html';
+    }
+  });
+
+  // ======================================================
+  // LISTADO INSCRIPCIONES + CSV
+  // ======================================================
+
+  const LISTAR_URL = '/public_html/api/listar_inscripciones.php';
+  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '' };
+
+
+  async function cargarInscripciones({ q = '', page = 1, pageSize = 20 } = {}) {
+    const main = document.getElementById('main-content');
+    const offset = (page - 1) * pageSize;
+    filtroActual.q = q;
+
+    main.innerHTML = `<h2>Usuarios Registrados</h2><p>Cargando...</p>`;
+
+    try {
+      const url = `${LISTAR_URL}?limit=${pageSize}&offset=${offset}&q=${encodeURIComponent(q)}&kit=${encodeURIComponent(filtroActual.kit || '')}&sort=${filtroActual.sort}&order=${filtroActual.order}`;
+      const res = await fetch(url, { credentials: 'include' });
+      const ct = res.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await res.json()
+                                                   : { success:false, message: await res.text() };
+
+      if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo obtener inscripciones');
+
+      const filas = (data.items || []).map(u => `
+        <tr>
+          <td>${esc(u.nombre)}</td>
+          <td>${esc(u.dni)}</td>
+          <td>${esc(u.email)}</td>
+          <td>${esc(u.carrera)}</td>
+          <td>${formatearFecha(u.fecha_inscripcion)}</td>
+          <td>
+            <button class="btn-mini" data-action="ver" data-id="${u.id}">Ver</button>
+            <button class="btn-mini" data-action="editar" data-id="${u.id}">Editar</button>
+            <button class="btn-mini danger" data-action="eliminar" data-id="${u.id}">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+
+      main.innerHTML = `
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+          <h2 style="margin:0">Usuarios Registrados</h2>
+          <input id="buscar" type="search" placeholder="Buscar por nombre/DNI/email"
+                 style="padding:8px; border-radius:8px; border:1px solid #ddd; min-width:260px" value="${esc(q)}"/>
+          <select id="filtroKit"
+            style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <option value="" ${filtroActual.kit===''?'selected':''}>Todos</option>
+            <option value="pendiente" ${filtroActual.kit==='pendiente'?'selected':''}>Kit pendiente</option>
+            <option value="retirado" ${filtroActual.kit==='retirado'?'selected':''}>Kit retirado</option>
+          </select>
+
+
+          <button id="exportarCsv" type="button"
+                  style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
+            Exportar CSV
+          </button>
+          <button id="btnNuevo" type="button"
+            style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
+            Nuevo
+          </button>
+
+          <span style="opacity:.7">Total: ${data.total}</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>DNI</th>
+              <th>Email</th>
+              <th>Distancia</th>
+              <th>Fecha inscripción</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filas || `<tr><td colspan="6" style="text-align:center; padding:20px;">Sin datos</td></tr>`}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('buscar').addEventListener('change', e =>
+        cargarInscripciones({ q: e.target.value, page: 1, pageSize })
+      );
+
+      document.getElementById('exportarCsv').addEventListener('click', () =>
+        exportarCSV({ q: filtroActual.q })
+      );
+
+      document.getElementById('btnNuevo')?.addEventListener('click', () => {
+        renderCrearInscripcion();
+      });
+
+      document.getElementById('filtroKit')?.addEventListener('change', (e) => {
+        filtroActual.kit = e.target.value; // '' | 'pendiente' | 'retirado'
+        cargarInscripciones({ q: filtroActual.q, page: 1, pageSize });
+      });
+
+
+      // ✅ (AGREGADO MÍNIMO) Delegación de eventos para botones CRUD
+      document.querySelector('#main-content tbody')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action][data-id]');
+        if (!btn) return;
+        onAccionUsuario(btn.dataset.action, Number(btn.dataset.id));
+      });
+
+    } catch (err) {
+      main.innerHTML = `<h2>Usuarios Registrados</h2><p style="color:#b00020">Error: ${esc(err.message)}</p>`;
+    }
+  }
+
+  // ========= Exportar CSV =========
+  async function exportarCSV({ q = '' } = {}) {
+    try {
+      const pageSize = 200;
+      let page = 1, items = [], total = 0;
+
+      do {
+        const url = `${LISTAR_URL}?limit=${pageSize}&offset=${(page-1)*pageSize}&q=${encodeURIComponent(q)}&kit=${encodeURIComponent(filtroActual.kit || '')}&sort=${filtroActual.sort}&order=${filtroActual.order}`;
+        const res = await fetch(url, { credentials: 'include' });
+        const ct = res.headers.get('content-type') || '';
+        const data = ct.includes('application/json') ? await res.json()
+                                                     : { success:false, message: await res.text() };
+
+        if (!res.ok || !data.success) throw new Error(data.message || 'Error al obtener datos');
+        items = items.concat(data.items || []);
+        total = data.total || 0;
+        page++;
+      } while (items.length < total);
+
+      const csv = construirCSV(items);
+      descargarArchivo(csv, `inscripciones${q ? '_'+limpiarNombre(q) : ''}_${hoyYYYYMMDD()}.csv`);
+    } catch (e) {
+      alert('No se pudo exportar: ' + e.message);
+    }
+  }
+
+  function construirCSV(items) {
+    const header = ['Nombre','DNI','Email','Carrera','Fecha_inscripcion'];
+    const filas = items.map(u => [
+      u.nombre ?? '',
+      u.dni ?? '',
+      u.email ?? '',
+      u.carrera ?? '',
+      formatearFechaISO(u.fecha_inscripcion)
+    ].map(csvEscape).join(','));
+
+    return '\uFEFF' + header.join(',') + '\r\n' + filas.join('\r\n');
+  }
+
+  function descargarArchivo(contenido, nombre) {
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ========= Utilidades =========
+  function formatearFecha(f){ const d=new Date(f); return isNaN(d)?'':d.toLocaleString(); }
+  function formatearFechaISO(f){
+    const d=new Date(f); if(isNaN(d)) return '';
+    const p=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+  function csvEscape(v){
+    const s=String(v ?? '');
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
+  function hoyYYYYMMDD(){
+    const d=new Date(); const p=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
+  function limpiarNombre(s){ return String(s).replace(/[^a-z0-9_-]+/gi,'_').slice(0,40); }
+  function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
+
+  // ✅ (AGREGADO MÍNIMO) Estilos para botones mini (solo si no existen)
+  (function addMiniBtnStyles(){
+    if (document.getElementById('mini-btn-styles')) return;
+    const css = `
+      .btn-mini{padding:6px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer;margin-right:6px}
+      .btn-mini.danger{border-color:#ffb4b4}
+    `;
+    const s=document.createElement('style');
+    s.id='mini-btn-styles';
+    s.textContent=css;
+    document.head.appendChild(s);
+  })();
+
+  // ✅ (AGREGADO MÍNIMO) Funciones CRUD
+  async function onAccionUsuario(action, id){
+    if (action === 'ver') return verInscripcion(id);
+    if (action === 'editar') return editarInscripcion(id);
+    if (action === 'eliminar') return eliminarInscripcion(id);
+  }
+
+  async function verInscripcion(id){
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<h2>Ver inscripción</h2><p style="opacity:.8">Cargando...</p>`;
+
+  try {
+    const res = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || 'Error al traer inscripción');
+
+    renderDetalleInscripcion(data.item);
+
+  } catch (e) {
+    main.innerHTML = `
+      <h2>Ver inscripción</h2>
+      <p style="color:#b00020">Error: ${esc(e.message)}</p>
+      <button id="btnVolverListado" class="btn-mini">Volver</button>
+    `;
+    document.getElementById('btnVolverListado')?.addEventListener('click', () => {
+      cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+    });
+  }
+}
+
+
+  async function editarInscripcion(id){
+  const res = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, {
+    credentials: 'include'
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    alert(data.message || 'Error al traer inscripción');
+    return;
+  }
+
+  // En vez de prompts, mostramos la vista Editar
+  renderEditarInscripcion(data.item);
+}
+
+(function addModalStyles(){
+  if (document.getElementById('modal-styles')) return;
+  const css = `
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999; padding:16px;
+    }
+    .modal{
+      width:min(520px, 100%); background:#fff; border-radius:14px;
+      box-shadow:0 12px 30px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .modal .header{
+      padding:14px 16px; border-bottom:1px solid #eee;
+      font-weight:700;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .modal .body{ padding:16px; }
+    .modal .footer{
+      padding:12px 16px; border-top:1px solid #eee;
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
+    }
+    .btn-modal{
+      padding:10px 14px; border-radius:10px; border:1px solid #ddd;
+      background:#fff; cursor:pointer;
+    }
+    .btn-modal.danger{
+      border-color:#ffb4b4;
+      background:#ffecec;
+    }
+    .btn-x{
+      border:0; background:transparent; cursor:pointer; font-size:18px; line-height:1;
+      padding:6px 8px; border-radius:8px;
+    }
+    .btn-x:hover{ background:#f2f2f2; }
+  `;
+  const s = document.createElement('style');
+  s.id = 'modal-styles';
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
+function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar='Confirmar', textoCancelar='Cancelar', danger=false }) {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+
+    backdrop.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="header">
+          <span>${esc(titulo)}</span>
+          <button class="btn-x" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="body">
+          <p style="margin:0">${esc(mensaje)}</p>
+        </div>
+        <div class="footer">
+          <button class="btn-modal" data-act="cancelar">${esc(textoCancelar)}</button>
+          <button class="btn-modal ${danger ? 'danger' : ''}" data-act="confirmar">${esc(textoConfirmar)}</button>
+        </div>
+      </div>
+    `;
+
+    function cerrar(valor){
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey);
+      resolve(valor);
+    }
+
+    function onKey(e){
+      if (e.key === 'Escape') cerrar(false);
+    }
+
+    // Cerrar al clickear afuera
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) cerrar(false);
+    });
+
+    // Botones
+    backdrop.querySelector('[data-act="cancelar"]').addEventListener('click', () => cerrar(false));
+    backdrop.querySelector('[data-act="confirmar"]').addEventListener('click', () => cerrar(true));
+    backdrop.querySelector('.btn-x').addEventListener('click', () => cerrar(false));
+
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(backdrop);
+  });
+}
+
+
+  async function eliminarInscripcion(id){
+  const ok = await abrirModalConfirmacion({
+    titulo: 'Eliminar inscripción',
+    mensaje: '¿Seguro que querés eliminar esta inscripción? Esta acción no se puede deshacer.',
+    textoConfirmar: 'Eliminar',
+    textoCancelar: 'Cancelar',
+    danger: true
+  });
+
+  if (!ok) return;
+
+  try {
+    const del = await fetch('/public_html/api/inscripcion_delete.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({ id })
+    });
+
+    const delData = await del.json().catch(()=> ({}));
+    if (!del.ok || !delData.success) {
+      alert(delData.message || 'No se pudo eliminar');
+      return;
+    }
+
+    // refrescar listado (manteniendo filtro)
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+
+  } catch (e) {
+    console.error(e);
+    alert('Error de conexión con el servidor');
+  }
+}
+
+async function toggleKitRetiro(id, value) {
+  const msg = value === 1
+    ? '¿Confirmar que el usuario retiró el kit?'
+    : '¿Desmarcar retiro de kit?';
+
+  if (!confirm(msg)) return;
+
+  const res = await fetch('/public_html/api/kit_toggle.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id, value })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    alert(data.message || 'No se pudo actualizar el estado del kit');
+    return;
+  }
+
+  // ✅ refrescar trayendo el usuario actualizado
+  const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+  const getData = await get.json().catch(() => ({}));
+  if (get.ok && getData.success) {
+    renderDetalleInscripcion(getData.item);
+  } else {
+    // fallback
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  }
+}
+
+
+
+  function renderDetalleInscripcion(u){
+  const main = document.getElementById('main-content');
+
+  const v = (x) => esc(x ?? '');
+  const fecha = (x) => v(formatearFecha(x));
+
+  main.innerHTML = `
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
+      <h2 style="margin:0">Inscripción #${v(u.id)}</h2>
+
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <button id="btnVolverListado" class="btn-mini">Volver</button>
+        <button id="btnEditarDesdeVer" class="btn-mini">Editar</button>
+        <button id="btnEliminarDesdeVer" class="btn-mini danger">Eliminar</button>
+        <button id="btnKitToggle" class="btn-mini">Validar retiro kit</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Datos personales</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Nombre</th><td>${v(u.nombre)}</td></tr>
+            <tr><th>DNI</th><td>${v(u.dni)}</td></tr>
+            <tr><th>Email</th><td>${v(u.email)}</td></tr>
+            <tr><th>Fecha nacimiento</th><td>${v(u.fecha_nacimiento)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Inscripción</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Carrera</th><td>${v(u.carrera)}</td></tr>
+            <tr><th>Talle remera</th><td>${v(u.talle_remera)}</td></tr>
+            <tr><th>Fecha inscripción</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
+            <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
+            <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Salud / Emergencia</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Cobertura médica</th><td>${v(u.cobertura_medica)}</td></tr>
+            <tr><th>N° afiliado</th><td>${v(u.numero_afiliado)}</td></tr>
+            <tr><th>Teléfono emergencia</th><td>${v(u.telefono_emergencia)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnVolverListado')?.addEventListener('click', () => {
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  });
+
+  document.getElementById('btnEditarDesdeVer')?.addEventListener('click', () => {
+    editarInscripcion(u.id);
+  });
+
+  document.getElementById('btnEliminarDesdeVer')?.addEventListener('click', () => {
+    eliminarInscripcion(u.id);
+  });
+
+
+// ✅ Botón validar kit (toggle)
+document.getElementById('btnKitToggle')?.addEventListener('click', () => {
+  const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+  toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
+});
+
+// texto del botón según estado (opcional pero útil)
+const btnKit = document.getElementById('btnKitToggle');
+if (btnKit) {
+  const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+  btnKit.textContent = yaRetiro ? 'Desmarcar retiro kit' : 'Validar retiro kit';
+}
+
+}
+
+function renderEditarInscripcion(u) {
+  const main = document.getElementById('main-content');
+  const v = (x) => esc(x ?? '');
+
+  main.innerHTML = `
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
+      <h2 style="margin:0">Editar inscripción #${v(u.id)}</h2>
+
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <button id="btnCancelarEdicion" class="btn-mini">Cancelar</button>
+        <button id="btnGuardarEdicion" class="btn-mini">Guardar</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Datos personales</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Nombre</label>
+            <input id="ed_nombre" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.nombre)}" />
+          </div>
+          <div>
+            <label>DNI</label>
+            <input id="ed_dni" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.dni)}" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="ed_email" type="email" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.email)}" />
+          </div>
+          <div>
+            <label>Fecha nacimiento</label>
+            <input id="ed_fecha_nacimiento" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.fecha_nacimiento)}" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Inscripción</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Carrera</label>
+            <select id="ed_carrera" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px">
+              ${['10km','3km','Kids'].map(c => `
+                <option value="${c}" ${String(u.carrera)===c ? 'selected' : ''}>${c}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div>
+            <label>Talle remera</label>
+            <input id="ed_talle_remera" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.talle_remera)}" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Salud / Emergencia</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Cobertura médica</label>
+            <input id="ed_cobertura_medica" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.cobertura_medica)}" />
+          </div>
+          <div>
+            <label>N° afiliado</label>
+            <input id="ed_numero_afiliado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.numero_afiliado)}" />
+          </div>
+          <div>
+            <label>Teléfono emergencia</label>
+            <input id="ed_telefono_emergencia" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
+                   value="${v(u.telefono_emergencia)}" />
+          </div>
+        </div>
+
+        <p id="ed_error" style="margin:12px 0 0 0; color:#b00020;"></p>
+        <p id="ed_ok" style="margin:12px 0 0 0; color:#0a7a2f;"></p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnCancelarEdicion')?.addEventListener('click', () => {
+    // volver a Ver (o al listado, como prefieras)
+    renderDetalleInscripcion(u);
+  });
+
+  document.getElementById('btnGuardarEdicion')?.addEventListener('click', async () => {
+    await guardarEdicionInscripcion(u.id);
+  });
+}
+
+function renderCrearInscripcion(){
+  const main = document.getElementById('main-content');
+
+  main.innerHTML = `
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
+      <h2 style="margin:0">Nueva inscripción</h2>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <button id="btnCancelarCrear" class="btn-mini">Cancelar</button>
+        <button id="btnGuardarCrear" class="btn-mini">Crear</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Datos personales</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Nombre</label>
+            <input id="cr_nombre" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+          <div>
+            <label>DNI</label>
+            <input id="cr_dni" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="cr_email" type="email" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+          <div>
+            <label>Fecha nacimiento</label>
+            <input id="cr_fecha_nacimiento" type="date" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Inscripción</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Carrera</label>
+            <select id="cr_carrera" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px">
+              <option value="10km">10km</option>
+              <option value="3km">3km</option>
+              <option value="Kids">Kids</option>
+            </select>
+          </div>
+          <div>
+            <label>Talle remera</label>
+              <select id="cr_talle_remera"
+              style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px">
+            </select>
+          </div>    
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Salud / Emergencia</div>
+      <div class="content">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
+          <div>
+            <label>Cobertura médica</label>
+            <input id="cr_cobertura_medica" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+          <div>
+            <label>N° afiliado</label>
+            <input id="cr_numero_afiliado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+          <div>
+            <label>Teléfono emergencia</label>
+            <input id="cr_telefono_emergencia" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
+          </div>
+        </div>
+
+        <p id="cr_error" style="margin:12px 0 0 0; color:#b00020;"></p>
+        <p id="cr_ok" style="margin:12px 0 0 0; color:#0a7a2f;"></p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnCancelarCrear')?.addEventListener('click', () => {
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  });
+
+  document.getElementById('btnGuardarCrear')?.addEventListener('click', async () => {
+    await guardarNuevaInscripcion();
+  });
+
+  const carreraSelect = document.getElementById('cr_carrera');
+
+// cargar talles iniciales
+cargarTallesPorCarrera(carreraSelect.value);
+
+// cuando cambia la carrera
+carreraSelect.addEventListener('change', () => {
+  cargarTallesPorCarrera(carreraSelect.value);
+});
+
+}
+
+const TALLES_POR_CARRERA = {
+  '10km': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  '3km':  ['XS', 'S', 'M', 'L', 'XL'],
+  'Kids': ['4', '6', '8', '10', '12']
+};
+
+function cargarTallesPorCarrera(carrera) {
+  const select = document.getElementById('cr_talle_remera');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  const talles = TALLES_POR_CARRERA[carrera] || [];
+
+  talles.forEach(talle => {
+    const opt = document.createElement('option');
+    opt.value = talle;
+    opt.textContent = talle;
+    select.appendChild(opt);
+  });
+}
+
+
+async function guardarEdicionInscripcion(id) {
+  const errEl = document.getElementById('ed_error');
+  const okEl = document.getElementById('ed_ok');
+  if (errEl) errEl.textContent = '';
+  if (okEl) okEl.textContent = '';
+
+  const payload = {
+    id,
+    nombre: document.getElementById('ed_nombre')?.value.trim() || '',
+    dni: document.getElementById('ed_dni')?.value.trim() || '',
+    email: document.getElementById('ed_email')?.value.trim() || '',
+    carrera: document.getElementById('ed_carrera')?.value || '',
+    fecha_nacimiento: document.getElementById('ed_fecha_nacimiento')?.value || '',
+    talle_remera: document.getElementById('ed_talle_remera')?.value.trim() || '',
+    cobertura_medica: document.getElementById('ed_cobertura_medica')?.value.trim() || '',
+    numero_afiliado: document.getElementById('ed_numero_afiliado')?.value.trim() || '',
+    telefono_emergencia: document.getElementById('ed_telefono_emergencia')?.value.trim() || ''
+  };
+
+  // validaciones mínimas
+  if (!payload.nombre || !payload.dni || !payload.email || !payload.carrera) {
+    if (errEl) errEl.textContent = 'Nombre, DNI, Email y Carrera son obligatorios.';
+    return;
+  }
+
+  try {
+    const up = await fetch('/public_html/api/inscripcion_update.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+
+    const data = await up.json().catch(() => ({}));
+    if (!up.ok || !data.success) {
+      if (errEl) errEl.textContent = data.message || 'No se pudo guardar.';
+      return;
+    }
+
+    if (okEl) okEl.textContent = 'Guardado ✅';
+
+    // traer de nuevo y mostrar "Ver"
+    const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+    const getData = await get.json().catch(() => ({}));
+    if (get.ok && getData.success) {
+      renderDetalleInscripcion(getData.item);
+    } else {
+      // si no, al menos refrescamos el listado
+      cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+    }
+
+  } catch (e) {
+    console.error(e);
+    if (errEl) errEl.textContent = 'Error de conexión con el servidor.';
+  }
+}
+
+async function guardarNuevaInscripcion(){
+  const errEl = document.getElementById('cr_error');
+  const okEl = document.getElementById('cr_ok');
+  if (errEl) errEl.textContent = '';
+  if (okEl) okEl.textContent = '';
+
+  const payload = {
+    nombre: document.getElementById('cr_nombre')?.value.trim() || '',
+    dni: document.getElementById('cr_dni')?.value.trim() || '',
+    email: document.getElementById('cr_email')?.value.trim() || '',
+    carrera: document.getElementById('cr_carrera')?.value || '',
+    fecha_nacimiento: document.getElementById('cr_fecha_nacimiento')?.value || '',
+    talle_remera: document.getElementById('cr_talle_remera')?.value.trim() || '',
+    cobertura_medica: document.getElementById('cr_cobertura_medica')?.value.trim() || '',
+    numero_afiliado: document.getElementById('cr_numero_afiliado')?.value.trim() || '',
+    telefono_emergencia: document.getElementById('cr_telefono_emergencia')?.value.trim() || ''
+  };
+
+  if (!payload.nombre || !payload.dni || !payload.email || !payload.carrera) {
+    if (errEl) errEl.textContent = 'Nombre, DNI, Email y Carrera son obligatorios.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/public_html/api/inscripcion_create.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) {
+      if (errEl) errEl.textContent = data.message || 'No se pudo crear.';
+      return;
+    }
+
+    if (okEl) okEl.textContent = 'Creado ✅';
+
+    // ir a ver el detalle recién creado (si la API devuelve id)
+    if (data.id) {
+      verInscripcion(data.id);
+      return;
+    }
+
+    // si no devuelve id, volvemos al listado
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+
+  } catch (e) {
+    console.error(e);
+    if (errEl) errEl.textContent = 'Error de conexión con el servidor.';
+  }
+}
+
+  // Menú → "Usuarios registrados"
+  document.getElementById('menu-usuarios').addEventListener('click', e => {
+    e.preventDefault();
+    cargarInscripciones();
+  });
+
+  // Dashboard simple
+  document.querySelector('#menu-dashboard')?.addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('main-content').innerHTML = '<h2>Dashboard</h2>';
+  });
+
+  // ====== DASHBOARD HARDCODEADO ======
+  (function addDashStyles(){
+    if (document.getElementById('dash-styles')) return;
+    const css = `
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px;margin:0 0 16px 0}
+    .kpi{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:16px}
+    .kpi .label{opacity:.7;font-size:13px}
+    .kpi .value{font-size:24px;font-weight:700;margin-top:6px}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);overflow:hidden;margin-top:16px}
+    .card .header{padding:12px 16px;border-bottom:1px solid #eee;font-weight:600}
+    .card .content{padding:16px}
+    table.simple{width:100%;border-collapse:collapse}
+    table.simple th, table.simple td{padding:10px 12px;border:1px solid #eee;text-align:left}
+    table.simple th{background:#2f323a;color:#fff}
+    @media (max-width:1000px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+    `;
+    const s=document.createElement('style'); s.id='dash-styles'; s.textContent=css;
+    document.head.appendChild(s);
+  })();
+
+  function renderDashboard(){
+    const main = document.getElementById('main-content');
+
+    const DEMO = {
+      total: 342, k10: 210, k3: 132, hoy: 8,
+      ultimas: [
+        { nombre:'Ana González', dni:'12345678', email:'ana@example.com', carrera:'10km', fecha:'2025-09-20 10:21:00' },
+        { nombre:'Luis Pérez', dni:'23456789', email:'luis@example.com', carrera:'3km', fecha:'2025-09-20 09:15:10' },
+        { nombre:'María Rodríguez', dni:'34567890', email:'maria@example.com', carrera:'Kids', fecha:'2025-09-19 18:03:34' },
+      ]
+    };
+
+    main.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 style="margin:0">Dashboard (demo)</h2>
+        <span style="opacity:.7;font-size:12px">Actualizado: ${hoyYYYYMMDD()}</span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="label"><i class="fas fa-users"></i> Total</div><div class="value">${DEMO.total}</div></div>
+        <div class="kpi"><div class="label"><i class="fas fa-running"></i> 10km</div><div class="value">${DEMO.k10}</div></div>
+        <div class="kpi"><div class="label"><i class="fas fa-shoe-prints"></i> 3km</div><div class="value">${DEMO.k3}</div></div>
+        <div class="kpi"><div class="label"><i class="far fa-calendar-check"></i> Hoy</div><div class="value">${DEMO.hoy}</div></div>
+      </div>
+
+      <div class="card">
+        <div class="header">Últimas inscripciones (demo)</div>
+        <div class="content">
+          <table class="simple">
+            <thead><tr><th>Nombre</th><th>DNI</th><th>Email</th><th>Carrera</th><th>Fecha</th></tr></thead>
+            <tbody>
+              ${DEMO.ultimas.map(u=>`
+                <tr>
+                  <td>${esc(u.nombre)}</td>
+                  <td>${esc(u.dni)}</td>
+                  <td>${esc(u.email)}</td>
+                  <td>${esc(u.carrera)}</td>
+                  <td>${formatearFecha(u.fecha)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // Click del menú Dashboard → render demo
+  document.querySelector('#menu-dashboard')?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    renderDashboard();
+  });
+
+  // Mostrar dashboard al cargar
+  document.addEventListener('DOMContentLoaded', renderDashboard);
+
+  // =======================
+  // VISTA: MARATONES (CSV históricos)
+  // =======================
+  function renderMaratones() {
+    const main = document.getElementById('main-content');
+
+    main.innerHTML = `
+      <h2>Maratones (histórico)</h2>
+
+      <div style="margin-top:12px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
+        <p style="margin:0 0 10px 0; opacity:.8">
+          Importá un CSV con columnas:
+          <code>edicion,nombre,dni,email,carrera,fecha_inscripcion</code>
+        </p>
+
+        <input id="csvFile" type="file" accept=".csv" />
+        <button id="btnImportarCsv" type="button"
+                style="margin-left:8px; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
+          Importar CSV
+        </button>
+
+        <div id="importResult" style="margin-top:12px;"></div>
+      </div>
+
+      <div style="margin-top:16px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+          <h3 style="margin:0">Listado histórico</h3>
+
+          <select id="filtroEdicion" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Todas las ediciones</option>
+          </select>
+
+          <input id="buscarHistorico" type="search" placeholder="Buscar por nombre/DNI/email/carrera"
+                 style="padding:8px; border-radius:8px; border:1px solid #ddd; min-width:260px" />
+
+          <span id="histTotal" style="opacity:.7"></span>
+        </div>
+
+        <div id="histTabla" style="margin-top:12px;">Cargando...</div>
+      </div>
+    `;
+
+    document.getElementById('btnImportarCsv').addEventListener('click', importarHistoricoCSV);
+
+    // cargar listado inicial
+    cargarHistorico();
+
+    // eventos filtros
+    document.getElementById('buscarHistorico').addEventListener('change', () => cargarHistorico({ page: 1 }));
+    document.getElementById('filtroEdicion').addEventListener('change', () => cargarHistorico({ page: 1 }));
+  }
+
+  async function importarHistoricoCSV() {
+    const fileInput = document.getElementById('csvFile');
+    const resultBox = document.getElementById('importResult');
+
+    resultBox.innerHTML = '';
+
+    const file = fileInput.files?.[0];
+    if (!file) {
+      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Seleccioná un archivo .csv</p>`;
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('csv', file);
+
+    resultBox.innerHTML = `<p style="margin:0;opacity:.8">Importando...</p>`;
+
+    try {
+      const res = await fetch('/public_html/api/historico_importar.php', {
+        method: 'POST',
+        body: fd,
+        credentials: 'include'
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(data.message || 'No se pudo importar')}</p>`;
+        return;
+      }
+
+      const inserted = data.inserted ?? 0;
+      const errors = Array.isArray(data.errors) ? data.errors : [];
+
+      resultBox.innerHTML = `
+        <p style="margin:0;color:#0a7a2f"><strong>OK</strong> Importados: ${inserted}</p>
+        ${errors.length ? `
+          <details style="margin-top:8px">
+            <summary style="cursor:pointer;color:#b00020">Ver errores (${errors.length})</summary>
+            <ul style="margin:8px 0 0 18px">
+              ${errors.map(e => `<li>${esc(e)}</li>`).join('')}
+            </ul>
+          </details>
+        ` : `<p style="margin:6px 0 0 0;opacity:.8">Sin errores.</p>`}
+      `;
+      await cargarHistorico({ page: 1 });
+
+    } catch (e) {
+      console.error(e);
+      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error de conexión con el servidor</p>`;
+    }
+  }
+
+  let historicoFiltro = { edicion: '', q: '', page: 1, pageSize: 50 };
+
+  async function cargarHistorico({ page } = {}) {
+    const tabla = document.getElementById('histTabla');
+    const totalEl = document.getElementById('histTotal');
+    const selEd = document.getElementById('filtroEdicion');
+    const inputQ = document.getElementById('buscarHistorico');
+
+    if (!tabla || !totalEl || !selEd || !inputQ) return;
+
+    if (page) historicoFiltro.page = page;
+    historicoFiltro.q = inputQ.value.trim();
+    historicoFiltro.edicion = selEd.value;
+
+    const offset = (historicoFiltro.page - 1) * historicoFiltro.pageSize;
+
+    tabla.innerHTML = 'Cargando...';
+
+    try {
+      const url = `/public_html/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
+      const res = await fetch(url, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar histórico');
+
+      // cargar opciones de ediciones una vez
+      if (selEd.options.length <= 1 && Array.isArray(data.ediciones)) {
+        data.ediciones.forEach(ed => {
+          const opt = document.createElement('option');
+          opt.value = String(ed);
+          opt.textContent = String(ed);
+          selEd.appendChild(opt);
+        });
+      }
+
+      totalEl.textContent = `Total: ${data.total ?? 0}`;
+
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      const rows = items.map(r => `
+        <tr>
+          <td>${esc(r.edicion)}</td>
+          <td>${esc(r.nombre)}</td>
+          <td>${esc(r.dni)}</td>
+          <td>${esc(r.email)}</td>
+          <td>${esc(r.carrera)}</td>
+          <td>${formatearFecha(r.fecha_inscripcion)}</td>
+        </tr>
+      `).join('');
+
+      tabla.innerHTML = `
+        <table style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Edición</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Nombre</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">DNI</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Email</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Carrera</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Fecha inscripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="6" style="padding:16px; text-align:center; border:1px solid #eee;">Sin datos</td></tr>`}
+          </tbody>
+        </table>
+      `;
+    } catch (e) {
+      tabla.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
+    }
+  }
+
+  // Click del menú "Maratones"
+  document.getElementById('menu-maratones')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    renderMaratones();
+  });
+
+  </script>
+</body>
+</html>

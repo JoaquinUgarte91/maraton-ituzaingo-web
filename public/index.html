@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Maratón Ituzaingó 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <a href="https://www.miituzaingo.gov.ar/" class="logo">
+        <img src="imagenes/logo.png" alt="Logo Municipalidad de Ituzaingó" />
+      </a>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#fundamentacion">Fundamentación</a></li>
+        <li><a href="#recorridos">Recorridos</a></li>
+        <li><a href="#contactos">Contactos</a></li>
+        <li><a href="#form-section">Inscribirse</a></li>
+        <li><a href="#redes">Redes</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero con imagen de fondo -->
+  <section class="hero" id="inicio">
+    <div class="hero-background">
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-logo">
+       
+      </div>
+      <div class="hero-text">
+        <h1>13° Maratón "Corremos Por Más Derechos y Más Igualdad"</h1>
+      </div>  
+      <div class="hero-info">
+        <p>
+          En el marco del Día Internacional de la Mujer, te invitamos a ser parte de esta 
+          edición especial donde el deporte se une a la lucha por una sociedad más justa 
+          e igualitaria.
+        </p>
+        <button onclick="document.getElementById('form-section').scrollIntoView({behavior: 'smooth'})">Inscribirse</button>
+      </div>
+      <div class="arrow-down">&#9660;</div>
+    </div>
+  </section>
+
+  <!-- Pasos -->
+  <section class="pasos">
+    <div class="paso">
+      <span>1</span>
+      <h4>Inscripción</h4>
+      <p>Completar el formulario con los datos correspondientes</p>
+    </div>
+    <div class="paso">
+      <span>2</span>
+      <h4>Tu QR</h4>
+      <p>Se te va a asignar un QR que vas a tener que llevar al momento de retirar tu kit de maratón</p>
+    </div>
+    <div class="paso">
+      <span>3</span>
+      <h4>Documentación</h4>
+      <p>Presentar la documentación requerida para el retiro del kit</p>
+    </div>
+    <div class="paso">
+      <span>4</span>
+      <h4>Guardar fecha</h4>
+      <p>Guardar la fecha con un recordatorio en tu calendario <a href="#fecha">AQUÍ</a></p>
+    </div>
+  </section>
+
+  <!-- Fundamentación -->
+  <section class="fundamentacion" id="fundamentacion">
+    <div class="container">
+      <h2>13° Edición Maratón "Corremos Por Más Derechos y Más Igualdad 2026"</h2>
+      <div class="fundamentacion-content">
+        <p>El Consejo de Mujeres, Géneros, Diversidad, Niñeces y Adolescencias de Ituzaingó, creado en 2010, desarrolla políticas públicas para combatir la cadena de desigualdades entre varones y mujeres. Erradicar la violencia de género requiere atención, asistencia y acompañamiento  pero también acciones que visibilicen y transformen las desigualdades. De esta manera, promovemos un cambio cultural que fomente la igualdad, el respeto a la diversidad y la protección integral de los derechos de las niñas, niños y adolescentes.
+        Como parte de las políticas públicas que buscan promover la igualdad de derechos, nace la Maratón en Ituzaingó. 
+        </p>
+        <p>
+        "Corremos por más derechos y más igualdad", en el marco del 8M, Día Internacional de la Mujer Trabajadora.
+        Desde 2013, la carrera convoca a miles de personas y familias para visibilizar la lucha contra las violencias por motivos de género y fortalecer una sociedad inclusiva y libre de discriminación. 
+        En 2022 han participado 15.000 personas; en 2023 se sumaron 14.000; en el año 2024 nuevamente 15.000 y en 2025 participaron más de 18.000 personas que se unieron por un reclamo colectivo: una vida sin violencias.
+        Porque por más derechos y más igualdad siempre hay nuevos kilómetros por recorrer, invitamos a ser parte de la edición 2026, para seguir construyendo juntas, juntos y juntes un Ituzaingó más justo, igualitario y libre de violencias.
+        </p>
+        
+        <p class="destacado">"Por más derechos y más igualdad siempre hay más kilómetros por recorrer".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recorridos Detallados -->
+  <section class="recorridos-detallados" id="recorridos-detallados">
+    <div class="container">
+      <h2>Recorridos Detallados</h2>
+      <div class="recorridos-tabs">
+        <button class="tab-button active" data-tab="recorrido-10k">10 Km</button>
+        <button class="tab-button" data-tab="recorrido-3k">3 Km</button>
+      </div>
+      
+      <div class="tab-content">
+        <div id="recorrido-10k" class="tab-pane active">
+          <div class="recorrido-info">
+            <h3>Recorrido de 10 Km</h3>
+            <div class="recorrido-mapa">
+              <img src="maps/10krecorrido.png" alt="Mapa del recorrido de 10Km">
+            </div>
+            <a href="/public/maps/10krecorrido.png" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
+          </div>
+        </div>
+        
+        <div id="recorrido-3k" class="tab-pane">
+          <div class="recorrido-info">
+            <h3>Recorrido de 3 Km</h3>
+            <div class="recorrido-mapa">
+              <img src="maps/recorrido3k1k.png" alt="Mapa del recorrido de 3Km">
+            </div>
+            <a href="/public/maps/recorrido3k1k.png" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección de Fecha -->
+  <section class="fecha-section" id="fecha">
+    <div class="container">
+      <h2>¡Guarda la Fecha!</h2>
+      <div class="fecha-info">
+        <div class="fecha-card">
+          <h3>8 de Marzo, 2026</h3>
+          <p>7:30 AM - Entrada en calor<br>Lugar: Plaza 20 de febrero, Las Heras y Zufriategui, Ituzaingó</p>
+          <button class="btn-calendario" onclick="agregarACalendario()">Agregar a mi calendario</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formulario -->
+  <section class="form-section" id="form-section">
+    <h2>Formulario de Inscripción - Maratón 2026</h2>
+    
+    <form id="formulario">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nombre">Nombre y Apellido:</label>
+          <input type="text" id="nombre" name="nombre" required>
+          <div class="error-message" id="nombre-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="dni">DNI:</label>
+          <input type="text" id="dni" name="dni" required pattern="\d{7,8}" title="Por favor ingrese un DNI válido (7 u 8 dígitos)">
+          <div class="error-message" id="dni-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico:</label>
+          <input type="email" id="email" name="email" required>
+          <div class="error-message" id="email-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="fecha_nacimiento">Fecha de Nacimiento:</label>
+          <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required max="2026-03-08">
+          <div class="error-message" id="fecha_nacimiento-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="carrera">Tipo de carrera:</label>
+          <select id="carrera" name="carrera" required>
+            <option value="">-- Seleccioná una opción --</option>
+            <option value="10km">10Km</option>
+            <option value="3km">3Km</option>
+            <option value="Kids">Kids</option>
+          </select>
+          <div class="error-message" id="carrera-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="talle_remera">Talle de Remera:</label>
+          <select id="talle_remera" name="talle_remera" required>
+            <option value="">-- Seleccioná un talle --</option>
+            <!-- Opciones se cargarán por JavaScript -->
+          </select>
+          <div class="error-message" id="talle_remera-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="cobertura_medica">Cobertura Médica:</label>
+          <input type="text" id="cobertura_medica" name="cobertura_medica" required>
+          <div class="error-message" id="cobertura_medica-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="numero_afiliado">Número de Afiliado:</label>
+          <input type="text" id="numero_afiliado" name="numero_afiliado" required>
+          <div class="error-message" id="numero_afiliado-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="telefono_emergencia">Teléfono de Emergencia:</label>
+          <input type="tel" id="telefono_emergencia" name="telefono_emergencia" required>
+          <div class="error-message" id="telefono_emergencia-error"></div>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn">Inscribirse</button>
+    </form>
+
+    <div class="loading hidden" id="loading">
+      <div class="loading-spinner"></div>
+      <p>Procesando tu inscripción...</p>
+    </div>
+
+    <div id="qr-container" class="hidden">
+      <h3>¡Inscripción exitosa!</h3>
+      <p>Tu número de corredor: <strong id="numero-corredor"></strong></p>
+      <p>Tu código QR para retirar el kit:</p>
+      <div id="qr"></div>
+      
+      <div class="info-adicional">
+        <h4>📋 Información importante para retirar tu kit:</h4>
+        <p><strong>Fechas de retiro:</strong> 4, 5 y 6 de marzo de 2026 de 9:00 a 18:00 hs</p>
+        <p><strong>Lugar:</strong> A confirmar por email</p>
+        <p><strong>Documentación requerida:</strong></p>
+        <ul>
+          <li>Deslinde de responsabilidad impreso y firmado</li>
+          <li>Fotocopia del DNI</li>
+          <li>Para menores: autorización y fotocopia del DNI del menor</li>
+        </ul>
+        <p><a href="#recorridos-detallados">📎 Ver mapas de recorrido</a></p>
+        <p><a href="#fundamentacion">📖 Conocer la fundamentación de la maratón</a></p>
+        <a href="/public/documentacion/DESLINDE DE RESPONSABILIDADES2025.docx" 
+        id="download-deslinde-btn"  
+        download>
+           Descargar Deslinde de Responsabilidades
+        </a>
+      </div>
+      
+      <button id="download-btn">Descargar QR</button>
+    </div>
+  </section>
+
+  <!-- Contactos -->
+  <section class="contactos" id="contactos">
+    <h2>Contactos</h2>
+    <div class="contactos-container">
+      <div class="contacto-card">
+        <h3>Informes Maratón</h3>
+        <p>mujeres_mimaraton@miituzaingo.gob.ar</p>
+        <p>Tel: 4627-1234</p>
+      </div>
+      <div class="contacto-card">
+        <h3>Departamento de Deportes</h3>
+        <p>deportes@ituzaingo.gov.ar</p>
+        <p>Tel: 4627-5678</p>
+      </div>
+      <div class="contacto-card">
+        <h3>Atención al Corredor</h3>
+        <p>Lunes a Viernes 9:00 a 16:00</p>
+        <p>Peatonal Eva Perón 848</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Redes -->
+  <section class="redes" id="redes">
+    <h2>Seguinos en nuestras redes</h2>
+    <div class="redes-sociales">
+      <a href="https://www.instagram.com/consejogeneros.ituzaingo?igsh=NzY1d2M2ajVxcHNp" class="red-social" target="_blank">
+        <i class="fab fa-instagram"></i> Instagram
+      </a>
+      <a href="#" class="red-social"><i class="fab fa-facebook"></i> Facebook</a>
+      <a href="#" class="red-social"><i class="fab fa-twitter"></i> Twitter</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logos">
+      <img src="imagenes/logo.png" alt="Logo Municipalidad de Ituzaingó">
+      <img src="imagenes/logovioleta.png" alt="13º Maratón 2026">
+    </div>
+    <p>Municipalidad de Ituzaingó © 2026 - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="script.js"></script>
+
+  <!-- Botón flotante para subir -->
+  <button id="btn-top">↑</button>
+
+  <script>
+    const btnTop = document.getElementById("btn-top");
+
+    window.onscroll = function () {
+      if (document.documentElement.scrollTop > 200) {
+        btnTop.style.display = "block";
+      } else {
+        btnTop.style.display = "none";
+      }
+    };
+
+    btnTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // JavaScript para los tabs de recorridos
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabPanes = document.querySelectorAll('.tab-pane');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const targetTab = this.getAttribute('data-tab');
+          
+          // Remover clase active de todos los botones y paneles
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabPanes.forEach(pane => pane.classList.remove('active'));
+          
+          // Agregar clase active al botón y panel correspondiente
+          this.classList.add('active');
+          document.getElementById(targetTab).classList.add('active');
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
