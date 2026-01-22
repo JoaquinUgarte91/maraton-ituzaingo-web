@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escanear Kit - Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            background: white;
+            padding: 15px;
+            position: relative;
+            min-height: 300px;
+        }
+        .qr-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+        }
+        .qr-placeholder i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #0d6efd;
+        }
+        .result-box {
+            min-height: 100px;
+            margin-top: 25px;
+            border-radius: 15px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            transform: scale(1.02);
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+        .login-container h2 {
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37,117,252,0.4);
+        }
+        .instructions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .btn-return {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-return:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 117, 252, 0.4);
+        }
+        .manual-input {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .debug-info {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9em;
+            display: none;
+        }
+        @media (max-width: 576px) {
+            #qr-reader {
+                max-width: 100%;
+                min-height: 250px;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .btn-return, .btn-login {
+                width: 100%;
+                justify-content: center;
+            }
+            .login-container {
+                margin: 20px 15px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Retiro de Kits de Participación</h1>
+            <p class="lead mb-0">Escaneá el QR del participante para confirmar la entrega de su kit</p>
+        </div>
+    </div>
+
+    <div class="container py-3">
+        <div class="text-center mb-4">
+            <button class="btn btn-return" onclick="window.history.back()">
+                <i class="bi bi-arrow-left"></i> Volver al Panel Principal
+            </button>
+        </div>
+
+        <!-- Login Container - se mostrará si no está autenticado -->
+        <div id="login-container" class="login-container" style="display:none;">
+            <h2><i class="bi bi-shield-lock me-2"></i>Acceso de Administrador</h2>
+            <p class="text-center text-muted mb-4">Por favor, ingresa las credenciales para continuar</p>
+            
+            <div class="mb-3">
+                <input type="text" id="username" class="form-control" placeholder="Usuario" value="admin">
+            </div>
+            <div class="mb-3">
+                <input type="password" id="password" class="form-control" placeholder="Contraseña" value="admin123">
+            </div>
+            
+            <button class="btn btn-login" id="login-btn">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+            </button>
+            
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                    Credenciales de desarrollo: admin / admin123
+                </small>
+            </div>
+        </div>
+
+        <!-- Contenido del escáner - se mostrará cuando esté autenticado -->
+        <div id="scanner-container" style="display:none;">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="instructions">
+                        <h5 class="mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Instrucciones</h5>
+                        <ul class="mb-0">
+                            <li>Permití el acceso a la cámara cuando el navegador lo solicite</li>
+                            <li>Apuntá la cámara hacia el QR del participante</li>
+                            <li>Al escanear correctamente, se actualizará automáticamente el estado del kit</li>
+                            <li>Si el QR no se escanea, ingresá manualmente el token en la parte inferior</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-3">
+                <div class="col-md-8">
+                    <div id="qr-reader">
+                        <div class="qr-placeholder">
+                            <i class="bi bi-upc-scan"></i>
+                            <h4>Cargando lector QR...</h4>
+                            <p class="text-muted">Espera un momento mientras se inicializa la cámara</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8">
+                    <div class="result-box text-center" id="result-message">
+                        <p class="mb-0 text-muted">Escaneá el QR del participante para comenzar...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8">
+                    <div class="card manual-input">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-keyboard me-2 text-secondary"></i>Ingreso Manual (si falla el escaneo)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group">
+                                <input type="text" id="manual-token" class="form-control" placeholder="Pegá aquí el token del QR (ej: a1b2c3d4...)">
+                                <button class="btn btn-primary" id="manual-submit">
+                                    <i class="bi bi-check2-circle me-1"></i>Confirmar
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                                Solo para casos de emergencia. El QR es el método recomendado.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8">
+                    <div class="debug-info" id="debug-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Librerías externas -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ✅ VARIABLE GLOBAL PARA CONTROLAR EL ESTADO DEL ESCÁNER
+        window.escanerPausado = false;
+
+        // ✅ SISTEMA DE AUTENTICACIÓN COMPLETO
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginContainer = document.getElementById('login-container');
+            const scannerContainer = document.getElementById('scanner-container');
+            const debugInfo = document.getElementById('debug-info');
+
+            // ✅ Verificar si está autenticado
+            const adminToken = localStorage.getItem('admin_token');
+            const adminUser = localStorage.getItem('admin_user');
+            
+            if (debugInfo) {
+                debugInfo.style.display = 'block';
+                debugInfo.innerHTML = `
+                    <strong>🔧 Información de Depuración:</strong><br>
+                    URL Base: ${window.location.origin + window.location.pathname.replace('/backoffice/escanear_kit.html', '')}<br>
+                    Autenticado: ${adminToken ? 'Sí' : 'No'}<br>
+                    Usuario: ${adminUser || 'No definido'}
+                `;
+            }
+
+            if (adminToken && adminToken === 'admin123' && adminUser === 'admin') {
+                loginContainer.style.display = 'none';
+                scannerContainer.style.display = 'block';
+                inicializarEscanner();
+            } else {
+                loginContainer.style.display = 'block';
+                scannerContainer.style.display = 'none';
+                configurarLogin();
+            }
+        });
+
+        // ✅ Configurar el formulario de login
+        function configurarLogin() {
+            document.getElementById('login-btn').addEventListener('click', () => {
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                if (username === 'admin' && password === 'admin123') {
+                    // ✅ Autenticación exitosa
+                    localStorage.setItem('admin_token', 'admin123');
+                    localStorage.setItem('admin_user', 'admin');
+                    localStorage.setItem('admin_auth_time', new Date().toISOString());
+                    
+                    // Ocultar login y mostrar escáner
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('scanner-container').style.display = 'block';
+                    
+                    // Mostrar mensaje de éxito
+                    const resultBox = document.getElementById('result-message');
+                    if (resultBox) {
+                        resultBox.className = 'border rounded p-3 fw-bold text-center success';
+                        resultBox.innerHTML = '✅ <strong>¡Autenticación exitosa!</strong><br>Bienvenido, administrador.';
+                        
+                        setTimeout(() => {
+                            resultBox.className = 'border rounded p-3 fw-bold text-muted text-center';
+                            resultBox.innerHTML = 'Escaneá el QR del participante para comenzar...';
+                        }, 3000);
+                    }
+                    
+                    // Inicializar el escáner
+                    inicializarEscanner();
+                } else {
+                    // ✅ Autenticación fallida
+                    alert('❌ Credenciales incorrectas. Por favor, intenta nuevamente.');
+                    document.getElementById('password').value = '';
+                }
+            });
+
+            // Permitir login con Enter
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('login-btn').click();
+                }
+            });
+        }
+
+        // ✅ Inicializar el escáner con autenticación
+        function inicializarEscanner() {
+            const baseUrl = window.location.origin + window.location.pathname.replace('/backoffice/escanear_kit.html', '');
+            console.log('✅ Base URL para escáner:', baseUrl);
+            
+            // Inicializar el lector QR
+            iniciarEscanner(baseUrl);
+            
+            // Configurar botón manual
+            document.getElementById('manual-submit').addEventListener('click', () => {
+                const token = document.getElementById('manual-token').value.trim();
+                if (token) {
+                    procesarQRManual(token, baseUrl);
+                }
+            });
+            
+            document.getElementById('manual-token').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('manual-submit').click();
+                }
+            });
+        }
+
+        // ✅ FUNCIÓN MODIFICADA: Iniciar escáner con control de pausa
+        function iniciarEscanner(baseUrl) {
+            if (window.escanerPausado) {
+                return;
+            }
+            
+            const qrReader = document.getElementById('qr-reader');
+            
+            qrReader.innerHTML = `
+                <div class="qr-placeholder">
+                    <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+                    <h4>Inicializando cámara...</h4>
+                    <p class="text-muted">Por favor, permite el acceso a tu cámara cuando se solicite</p>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1,
+                disableFlip: false,
+                rememberLastUsedCamera: true,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            };
+            
+            const html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    if (!window.escanerPausado) {
+                        console.log('✅ QR escaneado:', decodedText);
+                        procesarQR(decodedText, baseUrl);
+                    }
+                },
+                (errorMessage) => {
+                    console.warn('⚠️ Error de escaneo:', errorMessage);
+                    
+                    if (errorMessage.includes('Permission denied')) {
+                        qrReader.innerHTML = `
+                            <div class="qr-placeholder">
+                                <i class="bi bi-camera-fill" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                                <h4>Permiso de cámara denegado</h4>
+                                <p class="text-muted">Por favor, permite el acceso a la cámara en los ajustes de tu navegador</p>
+                                <button class="btn btn-primary mt-3" onclick="location.reload()">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Reintentar
+                                </button>
+                            </div>
+                        `;
+                    } else if (errorMessage.includes('No cameras found')) {
+                        qrReader.innerHTML = `
+                            <div class="qr-placeholder">
+                                <i class="bi bi-camera" style="font-size: 48px; color: #ffc107; margin-bottom: 15px;"></i>
+                                <h4>No se encontró cámara</h4>
+                                <p class="text-muted">Tu dispositivo no tiene cámara o no está disponible</p>
+                                <p class="text-muted mt-2">Usa el ingreso manual en la parte inferior</p>
+                            </div>
+                        `;
+                    }
+                }
+            ).catch((err) => {
+                console.error('❌ Error al iniciar cámara:', err);
+                qrReader.innerHTML = `
+                    <div class="qr-placeholder">
+                        <i class="bi bi-camera-slash" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                        <h4>Error al acceder a la cámara</h4>
+                        <p class="text-muted">${err.message || 'No se pudo inicializar la cámara'}</p>
+                        <button class="btn btn-primary mt-3" onclick="location.reload()">
+                            <i class="bi bi-arrow-repeat me-1"></i>Reintentar
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // ✅ FUNCIÓN CORREGIDA: Procesar QR escaneado con pausa después de éxito
+        function procesarQR(decodedText, baseUrl) {
+            const resultBox = document.getElementById('result-message');
+            const qrReader = document.getElementById('qr-reader');
+            const manualInput = document.getElementById('manual-token');
+            const manualBtn = document.getElementById('manual-submit');
+            
+            // ✅ DETENER EL ESCÁNER SI YA ESTÁ EN PAUSA
+            if (window.escanerPausado) {
+                return;
+            }
+            
+            try {
+                // ✅ MARCAR ESCÁNER COMO PAUSADO
+                window.escanerPausado = true;
+                
+                showMessage('Procesando escaneo...', 'info', 0);
+                
+                let qrData;
+                try {
+                    qrData = JSON.parse(decodedText);
+                } catch (e) {
+                    const tokenMatch = decodedText.match(/"token":"([a-f0-9]{32})"/);
+                    if (tokenMatch) {
+                        qrData = { token: tokenMatch[1] };
+                    } else {
+                        throw new Error('Formato de QR inválido. Debe contener un token válido.');
+                    }
+                }
+                
+                if (!qrData.token || qrData.token.length !== 32 || !/^[a-f0-9]+$/.test(qrData.token.toLowerCase())) {
+                    throw new Error('Token de QR inválido. Debe ser alfanumérico de 32 caracteres.');
+                }
+                
+                // ✅ INCLUIR EL TOKEN DE AUTENTICACIÓN EN LA PETICIÓN
+                fetch(`${baseUrl}/api/kit_toggle.php`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-API-KEY': 'admin123',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ 
+                        qr_data: decodedText,
+                        token: qrData.token.toLowerCase()
+                    }),
+                    credentials: 'include'
+                })
+                .then(async response => {
+                    const text = await response.text();
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        
+                        if (!response.ok) {
+                            // ✅ CASO ESPECIAL: Error 409 (kit ya retirado)
+                            if (response.status === 409 && data.message.includes('kit ya fue retirado')) {
+                                throw new Error('✅ Este kit ya fue retirado anteriormente. Listo para escanear el próximo participante.');
+                            }
+                            throw new Error(data.message || `Error [${response.status}]: ${response.statusText}`);
+                        }
+                        
+                        return data;
+                    } catch (e) {
+                        if (typeof e === 'string') {
+                            throw new Error(e);
+                        }
+                        throw e;
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        // ✅ MOSTRAR MENSAJE DE ÉXITO CON COLOR ESPECIAL
+                        resultBox.className = 'border rounded p-3 fw-bold text-center success';
+                        resultBox.innerHTML = `
+                            <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+                            <h4>¡Kit entregado correctamente!</h4>
+                            <p><strong>ID del participante:</strong> ${data.participante_id}</p>
+                            <p><strong>Fecha y hora:</strong> ${data.timestamp}</p>
+                            <button class="btn btn-primary mt-3" id="nuevo-escaneo-btn">
+                                <i class="bi bi-upc-scan me-2"></i>Escanea nuevo participante
+                            </button>
+                        `;
+                        
+                        // ✅ SONIDO DE CONFIRMACIÓN
+                        if (typeof Audio !== 'undefined') {
+                            const audio = new Audio('https://assets.mixkit.co/sounds/preview/mixkit-winning-chimes-2015.mp3');
+                            audio.volume = 0.3;
+                            audio.play().catch(e => console.log('🔇 Sonido no reproducido:', e));
+                        }
+                        
+                        // ✅ DESACTIVAR INPUTS TEMPORALMENTE
+                        if (manualInput) manualInput.disabled = true;
+                        if (manualBtn) manualBtn.disabled = true;
+                        
+                        // ✅ AGREGAR BOTÓN PARA NUEVO ESCÁNER
+                        document.getElementById('nuevo-escaneo-btn').addEventListener('click', () => {
+                            reiniciarEscanner(baseUrl);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error en petición:', error);
+                    
+                    // ✅ DETECTAR SI ES ERROR 409 (kit ya retirado)
+                    if (error.message.includes('kit ya fue retirado') || error.message.includes('ya retirado anteriormente')) {
+                        resultBox.className = 'border rounded p-3 fw-bold text-center warning';
+                        resultBox.innerHTML = `
+                            <div style="font-size: 3rem; margin-bottom: 10px;">🟡</div>
+                            <h4>Kit ya retirado</h4>
+                            <p>Este participante ya retiró su kit anteriormente.</p>
+                            <button class="btn btn-primary mt-3" id="nuevo-escaneo-btn">
+                                <i class="bi bi-upc-scan me-2"></i>Escanea nuevo participante
+                            </button>
+                        `;
+                    } else {
+                        // ✅ OTROS ERRORES
+                        resultBox.className = 'border rounded p-3 fw-bold text-center error';
+                        resultBox.innerHTML = `
+                            <div style="font-size: 3rem; margin-bottom: 10px;">❌</div>
+                            <h4>Error al procesar</h4>
+                            <p>${error.message || 'Error al actualizar el estado del kit'}</p>
+                            <button class="btn btn-warning mt-3" id="reintentar-btn">
+                                <i class="bi bi-arrow-repeat me-2"></i>Reintentar
+                            </button>
+                            <button class="btn btn-primary mt-2" id="nuevo-escaneo-btn">
+                                <i class="bi bi-upc-scan me-2"></i>Nuevo escaneo
+                            </button>
+                        `;
+                    }
+                    
+                    // ✅ AGREGAR EVENTOS A LOS BOTONES
+                    document.getElementById('nuevo-escaneo-btn')?.addEventListener('click', () => {
+                        reiniciarEscanner(baseUrl);
+                    });
+                    
+                    document.getElementById('reintentar-btn')?.addEventListener('click', () => {
+                        resultBox.innerHTML = '<p class="mb-0 text-muted">Procesando...</p>';
+                        resultBox.className = 'border rounded p-3 fw-bold text-center info';
+                        procesarQR(decodedText, baseUrl);
+                    });
+                })
+                .finally(() => {
+                    // ✅ LIMPIAR INPUT MANUAL
+                    if (manualInput) {
+                        manualInput.value = '';
+                    }
+                });
+                
+            } catch (e) {
+                console.error('❌ Error de procesamiento:', e);
+                showMessage(`❌ ${e.message || 'Error al procesar el QR'}`, 'error');
+                // ✅ REACTIVAR ESCÁNER DESPUÉS DE ERROR
+                setTimeout(() => {
+                    if (window.escanerPausado) {
+                        window.escanerPausado = false;
+                    }
+                }, 2000);
+            }
+        }
+
+        // ✅ FUNCIÓN NUEVA: Reiniciar el escáner para un nuevo participante
+        function reiniciarEscanner(baseUrl) {
+            const resultBox = document.getElementById('result-message');
+            const qrReader = document.getElementById('qr-reader');
+            const manualInput = document.getElementById('manual-token');
+            const manualBtn = document.getElementById('manual-submit');
+            
+            // ✅ REACTIVAR ESCÁNER
+            window.escanerPausado = false;
+            
+            // ✅ LIMPIAR MENSAJE DE RESULTADO
+            resultBox.className = 'border rounded p-3 fw-bold text-muted text-center';
+            resultBox.innerHTML = 'Escaneá el QR del participante para comenzar...';
+            
+            // ✅ REINICIAR VISTA DE CÁMARA
+            qrReader.innerHTML = `
+                <div class="qr-placeholder">
+                    <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+                    <h4>Inicializando cámara...</h4>
+                    <p class="text-muted">Por favor, permite el acceso a tu cámara cuando se solicite</p>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            
+            // ✅ REACTIVAR INPUTS
+            if (manualInput) manualInput.disabled = false;
+            if (manualBtn) manualBtn.disabled = false;
+            
+            // ✅ REINICIAR EL ESCÁNER DESPUÉS DE UN RETRASO
+            setTimeout(() => {
+                iniciarEscanner(baseUrl);
+            }, 500);
+        }
+
+        // ✅ FunCIÓN CORREGIDA: Procesar QR manual CON AUTENTICACIÓN
+        function procesarQRManual(token, baseUrl) {
+            if (!token) {
+                showMessage('⚠️ Por favor ingresa un token válido', 'warning');
+                return;
+            }
+            
+            try {
+                if (token.length !== 32 || !/^[a-f0-9]+$/.test(token.toLowerCase())) {
+                    throw new Error('Token inválido. Debe ser alfanumérico de 32 caracteres');
+                }
+                
+                // ✅ PAUSAR EL ESCÁNER DURANTE EL PROCESAMIENTO MANUAL
+                window.escanerPausado = true;
+                
+                showMessage('Procesando ingreso manual...', 'info', 0);
+                procesarQR(JSON.stringify({ token: token.toLowerCase() }), baseUrl);
+                document.getElementById('manual-token').value = '';
+                
+            } catch (e) {
+                console.error('❌ Error en QR manual:', e);
+                showMessage(`❌ ${e.message}`, 'error');
+                // ✅ REACTIVAR ESCÁNER DESPUÉS DE ERROR
+                setTimeout(() => {
+                    window.escanerPausado = false;
+                }, 2000);
+            }
+        }
+
+        // ✅ FunCIÓN CORREGIDA: Mostrar mensajes
+        function showMessage(message, type = 'info', duration = 3000) {
+            const resultBox = document.getElementById('result-message');
+            
+            let className = 'border rounded p-3 fw-bold text-center';
+            let icon = 'ℹ️';
+            
+            switch(type) {
+                case 'success':
+                    className += ' success';
+                    icon = '✅';
+                    break;
+                case 'error':
+                    className += ' error';
+                    icon = '❌';
+                    duration = 5000;
+                    break;
+                case 'warning':
+                    className += ' warning';
+                    icon = '⚠️';
+                    duration = 4000;
+                    break;
+                case 'info':
+                    className += ' info';
+                    icon = 'ℹ️';
+                    break;
+            }
+            
+            resultBox.className = className;
+            resultBox.innerHTML = `<strong>${icon}</strong> ${message}`;
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (type !== 'error') {
+                        resultBox.className = 'border rounded p-3 fw-bold text-muted text-center';
+                        resultBox.innerHTML = 'Escaneá el QR del participante para comenzar...';
+                    }
+                }, duration);
+            }
+        }
+    </script>
+</body>
+</html>
