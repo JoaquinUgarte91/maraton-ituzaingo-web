@@ -10,6 +10,10 @@ if (!isset($_SESSION['admin_id'])) {
 
 echo json_encode([
   'ok' => true,
-  'admin_id' => $_SESSION['admin_id'],
-  'username' => $_SESSION['admin_username'] ?? ''
+  'admin' => [
+    'id' => (int)$_SESSION['admin_id'],
+    'username' => $_SESSION['admin_username'] ?? '',
+    'role' => $_SESSION['admin_role'] ?? null,
+    'scope_kit' => $_SESSION['admin_scope_kit'] ?? null,
+  ]
 ]);

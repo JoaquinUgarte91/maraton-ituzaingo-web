@@ -1,5 +1,19 @@
 <?php
+session_start();
 header('Content-Type: application/json; charset=utf-8');
+
+// ✅ BLOQUEO REAL (BACK) — solo admin_total puede crear
+if (!isset($_SESSION['admin_id'])) {
+  http_response_code(401);
+  echo json_encode(['success' => false, 'message' => 'No autenticado']);
+  exit;
+}
+
+if (($_SESSION['admin_role'] ?? '') !== 'admin_total') {
+  http_response_code(403);
+  echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+  exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
@@ -32,11 +46,9 @@ $numero_afiliado     = $input['numero_afiliado'] ?? '';
 $telefono_emergencia = $input['telefono_emergencia'] ?? '';
 
 try {
-  // ✅ Conexión directa (igual que tu inscripcion.php y stock.php)
   $pdo = new PDO("mysql:host=localhost;dbname=maraton_db;charset=utf8", "root", "");
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  // evitar DNI duplicado
   $st = $pdo->prepare("SELECT id FROM inscripciones WHERE dni = ? LIMIT 1");
   $st->execute([$dni]);
   if ($st->fetch()) {

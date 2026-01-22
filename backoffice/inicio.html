@@ -15,7 +15,7 @@
       <a href="#" class="nav-item" id="menu-dashboard"><i class="fas fa-home"></i> Dashboard</a>
       <a href="#" class="nav-item" id="menu-usuarios"><i class="fas fa-inbox"></i> Usuarios registrados</a>
       <a href="#" class="nav-item" id="menu-maratones"><i class="fas fa-image"></i> Maratones</a>
-      <a href="#" class="nav-item"><i class="fas fa-chart-area"></i> Charts</a>
+      <a href="#" class="nav-item" id="menu-admins"><i class="fas fa-user-shield"></i> Administrar usuarios</a>
       <a href="#" class="nav-item"><i class="fas fa-code"></i> Short Codes</a>
       <a href="#" class="nav-item"><i class="fas fa-exclamation-circle"></i> Error Page</a>
       <a href="#" class="nav-item"><i class="fas fa-table"></i> Tables</a>
@@ -35,21 +35,50 @@
   </main>
 
   <script>
-  // ======================================================
-  // 🔐 PROTECCIÓN DE SESIÓN (SI NO HAY LOGIN → REDIRECT)
-  // ======================================================
-  (async () => {
-    try {
-      const res = await fetch('/public_html/api/me.php', {
-        credentials: 'include'
-      });
-      if (!res.ok) {
-        window.location.href = './index.html';
-      }
-    } catch (e) {
+  
+// ======================================================
+// 🔐 PROTECCIÓN DE SESIÓN (SI NO HAY LOGIN → REDIRECT)
+// ======================================================
+window.__ME__ = null;
+
+(async () => {
+  try {
+    const res = await fetch('/public_html/api/me.php', {
+      credentials: 'include'
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    // si no está autenticado → volver al login
+    if (!res.ok || !data.ok) {
       window.location.href = './index.html';
+      return;
     }
-  })();
+
+    // ✅ guardamos el admin (id, username, role, scope_kit)
+    window.__ME__ = data.admin || null;
+
+    // ======================================================
+    // ✅ PUNTO 1: ocultar tab "Administrar usuarios"
+    // (solo debe verse para admin_total)
+    // ======================================================
+    const role = window.__ME__?.role ?? null;
+
+    const menuAdmins = document.getElementById('menu-admins'); // <- tu <a id="menu-admins">
+    if (menuAdmins && role !== 'admin_total') {
+      menuAdmins.style.display = 'none';
+    }
+
+    const menuMaratones = document.getElementById('menu-maratones');
+    if (menuMaratones && role === 'admin_externo') {
+      menuMaratones.style.display = 'none';
+    }
+
+  } catch (e) {
+    window.location.href = './index.html';
+  }
+})();
+
 
   // ======================================================
   // LOGOUT
@@ -90,6 +119,10 @@
 
       if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo obtener inscripciones');
 
+      // ✅ ACÁ (PUNTO 1): permisos según rol
+      const role = window.__ME__?.role;
+      const canWrite = role === 'admin_total';
+      
       const filas = (data.items || []).map(u => `
         <tr>
           <td>${esc(u.nombre)}</td>
@@ -99,9 +132,12 @@
           <td>${formatearFecha(u.fecha_inscripcion)}</td>
           <td>
             <button class="btn-mini" data-action="ver" data-id="${u.id}">Ver</button>
+            ${canWrite ? `
             <button class="btn-mini" data-action="editar" data-id="${u.id}">Editar</button>
             <button class="btn-mini danger" data-action="eliminar" data-id="${u.id}">Eliminar</button>
-          </td>
+  ` : ``}
+</td>
+
         </tr>
       `).join('');
 
@@ -122,10 +158,13 @@
                   style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
             Exportar CSV
           </button>
-          <button id="btnNuevo" type="button"
-            style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
-            Nuevo
-          </button>
+          ${canWrite ? `
+            <button id="btnNuevo" type="button"
+              style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
+              Nuevo
+            </button>
+` : ``}
+
 
           <span style="opacity:.7">Total: ${data.total}</span>
         </div>
@@ -468,15 +507,22 @@ async function toggleKitRetiro(id, value) {
   const v = (x) => esc(x ?? '');
   const fecha = (x) => v(formatearFecha(x));
 
+  // ✅ permisos según rol (usa lo que ya guardaste en window.__ME__)
+  const role = window.__ME__?.role ?? null;
+  const canWrite = role === 'admin_total'; // solo admin_total puede editar/eliminar
+  const canToggleKit = role === 'admin_total' || role === 'admin_visualizador';
+
   main.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
       <h2 style="margin:0">Inscripción #${v(u.id)}</h2>
 
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
         <button id="btnVolverListado" class="btn-mini">Volver</button>
-        <button id="btnEditarDesdeVer" class="btn-mini">Editar</button>
-        <button id="btnEliminarDesdeVer" class="btn-mini danger">Eliminar</button>
-        <button id="btnKitToggle" class="btn-mini">Validar retiro kit</button>
+
+        ${canWrite ? `<button id="btnEditarDesdeVer" class="btn-mini">Editar</button>` : ``}
+        ${canWrite ? `<button id="btnEliminarDesdeVer" class="btn-mini danger">Eliminar</button>` : ``}
+        ${canToggleKit ? `<button id="btnKitToggle" class="btn-mini">Validar retiro kit</button>` : ``}
+
       </div>
     </div>
 
@@ -505,7 +551,6 @@ async function toggleKitRetiro(id, value) {
             <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
             <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
           </tbody>
-
         </table>
       </div>
     </div>
@@ -528,6 +573,7 @@ async function toggleKitRetiro(id, value) {
     cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
   });
 
+  // ✅ Solo si existen (admin_total), conectamos handlers
   document.getElementById('btnEditarDesdeVer')?.addEventListener('click', () => {
     editarInscripcion(u.id);
   });
@@ -536,21 +582,25 @@ async function toggleKitRetiro(id, value) {
     eliminarInscripcion(u.id);
   });
 
+  // ✅ Esto SÍ debe estar permitido para visualizador/external
+  if (canToggleKit) {
+  document.getElementById('btnKitbToggle')?.addEventListener('click', () => {
+    const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+    toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
+  });
+}
 
-// ✅ Botón validar kit (toggle)
-document.getElementById('btnKitToggle')?.addEventListener('click', () => {
-  const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
-  toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
-});
-
-// texto del botón según estado (opcional pero útil)
-const btnKit = document.getElementById('btnKitToggle');
-if (btnKit) {
-  const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
-  btnKit.textContent = yaRetiro ? 'Desmarcar retiro kit' : 'Validar retiro kit';
+  // texto del botón según estado
+  if (canToggleKit) {
+  const btnKit = document.getElementById('btnKitToggle');
+  if (btnKit) {
+    const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+    btnKit.textContent = yaRetiro ? 'Desmarcar retiro kit' : 'Validar retiro kit';
+  }
 }
 
 }
+
 
 function renderEditarInscripcion(u) {
   const main = document.getElementById('main-content');
@@ -894,6 +944,13 @@ async function guardarNuevaInscripcion(){
     cargarInscripciones();
   });
 
+  // Menú → "Administrar usuarios" (ADMINS)
+  document.getElementById('menu-admins')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    renderAdmins();
+  });
+
+
   // Dashboard simple
   document.querySelector('#menu-dashboard')?.addEventListener('click', e => {
     e.preventDefault();
@@ -1157,6 +1214,135 @@ async function guardarNuevaInscripcion(){
     e.preventDefault();
     renderMaratones();
   });
+
+  // =======================
+// VISTA: ADMINISTRAR ADMINS
+// =======================
+async function renderAdmins() {
+  const main = document.getElementById('main-content');
+
+  // chequeo rol desde sesión (frontend)
+  const role = window.__ME__?.role;
+  if (role !== 'admin_total') {
+    main.innerHTML = `
+      <h2>Administrar usuarios</h2>
+      <p style="color:#b00020">No tenés permisos para acceder a esta pantalla.</p>
+    `;
+    return;
+  }
+
+  main.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0">Administrar usuarios (Admins)</h2>
+      <span style="opacity:.7">Solo admin_total</span>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Crear admin</div>
+      <div class="content">
+        <form id="formCrearAdmin" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input name="username" placeholder="username" required
+                 style="padding:10px;border:1px solid #ddd;border-radius:10px" />
+          <input name="password" type="password" placeholder="password" required
+                 style="padding:10px;border:1px solid #ddd;border-radius:10px" />
+          <select name="role" style="padding:10px;border:1px solid #ddd;border-radius:10px">
+            <option value="admin_total">admin_total</option>
+            <option value="admin_visualizador" selected>admin_visualizador</option>
+            <option value="admin_externo">admin_externo (solo 10k)</option>
+          </select>
+          <button class="btn-mini" type="submit">Crear</button>
+          <span id="adminsMsg" style="margin-left:8px"></span>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Admins existentes</div>
+      <div class="content">
+        <div id="adminsTabla">Cargando...</div>
+      </div>
+    </div>
+  `;
+
+  await cargarAdminsTabla();
+
+  // Crear
+  document.getElementById('formCrearAdmin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('adminsMsg');
+    msg.textContent = '';
+    msg.style.color = '';
+
+    const fd = new FormData(e.target);
+    const payload = {
+      username: (fd.get('username') || '').toString().trim(),
+      password: (fd.get('password') || '').toString(),
+      role: (fd.get('role') || 'admin_visualizador').toString()
+    };
+
+    try {
+      const res = await fetch('/public_html/api/admins_create.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(()=> ({}));
+
+      if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo crear');
+
+      msg.style.color = '#0a7a2f';
+      msg.textContent = 'Admin creado ✅';
+      e.target.reset();
+      await cargarAdminsTabla();
+    } catch (err) {
+      msg.style.color = '#b00020';
+      msg.textContent = err.message;
+    }
+  });
+}
+
+async function cargarAdminsTabla(){
+  const box = document.getElementById('adminsTabla');
+  if (!box) return;
+  box.textContent = 'Cargando...';
+
+  try {
+    const res = await fetch('/public_html/api/admins_list.php', { credentials:'include' });
+    const data = await res.json().catch(()=> ({}));
+
+    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo listar');
+
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    const rows = items.map(a => `
+      <tr>
+        <td>${esc(a.id)}</td>
+        <td>${esc(a.username)}</td>
+        <td>${esc(a.role || '')}</td>
+        <td>${esc(a.scope_kit || '')}</td>
+        <td>${a.is_active == 1 ? 'Sí' : 'No'}</td>
+        <td>${esc(a.created_at || '')}</td>
+      </tr>
+    `).join('');
+
+    box.innerHTML = `
+      <table class="simple">
+        <thead>
+          <tr>
+            <th>ID</th><th>Username</th><th>Rol</th><th>Scope</th><th>Activo</th><th>Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="6" style="padding:16px;text-align:center">Sin admins</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    box.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
+  }
+}
+
 
   </script>
 </body>

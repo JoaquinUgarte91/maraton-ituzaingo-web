@@ -13,20 +13,36 @@ if ($username === '' || $password === '') {
   exit;
 }
 
-$stmt = $conexion->prepare("SELECT id, username, password_hash, is_active FROM admins WHERE username = ? LIMIT 1");
+// Traemos role y scope_kit también
+$stmt = $conexion->prepare("SELECT id, username, password_hash, role, scope_kit, is_active FROM admins WHERE username = ? LIMIT 1");
 $stmt->bind_param("s", $username);
 $stmt->execute();
 $res = $stmt->get_result();
 $admin = $res->fetch_assoc();
 
-if (!$admin || (int)$admin['is_active'] !== 1 || !password_verify($password, $admin['password_hash'])) {
+if (
+  !$admin ||
+  (int)$admin['is_active'] !== 1 ||
+  !password_verify($password, $admin['password_hash'])
+) {
   http_response_code(401);
   echo json_encode(['ok' => false, 'message' => 'Usuario o contraseña incorrectos']);
   exit;
 }
 
 session_regenerate_id(true);
+
+// Sesión base
 $_SESSION['admin_id'] = (int)$admin['id'];
 $_SESSION['admin_username'] = $admin['username'];
 
-echo json_encode(['ok' => true, 'username' => $admin['username']]);
+// ✅ Sesión para permisos
+$_SESSION['admin_role'] = $admin['role'];                 // admin_total | admin_visualizador | admin_externo
+$_SESSION['admin_scope_kit'] = $admin['scope_kit'] ?? null; // null o '10k'
+
+echo json_encode([
+  'ok' => true,
+  'username' => $admin['username'],
+  'role' => $admin['role'],
+  'scope_kit' => $admin['scope_kit'] ?? null
+]);
