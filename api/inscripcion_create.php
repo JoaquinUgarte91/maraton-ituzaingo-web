@@ -1,10 +1,6 @@
 <?php
 session_start();
-
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
 
 // ✅ BLOQUEO REAL (BACK) — solo admin_total puede crear
 if (!isset($_SESSION['admin_id'])) {
@@ -21,14 +17,14 @@ if (($_SESSION['admin_role'] ?? '') !== 'admin_total') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
-  echo json_encode(['success' => false, 'message' => 'Solo se acepta POST']);
+  echo json_encode(['success'=>false,'message'=>'Solo se acepta POST']);
   exit;
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) {
   http_response_code(400);
-  echo json_encode(['success' => false, 'message' => 'JSON inválido']);
+  echo json_encode(['success'=>false,'message'=>'JSON inválido']);
   exit;
 }
 
@@ -37,9 +33,9 @@ $dni     = trim($input['dni'] ?? '');
 $email   = trim($input['email'] ?? '');
 $carrera = trim($input['carrera'] ?? '');
 
-if ($nombre === '' || $dni === '' || $email === '' || $carrera === '') {
+if ($nombre==='' || $dni==='' || $email==='' || $carrera==='') {
   http_response_code(400);
-  echo json_encode(['success' => false, 'message' => 'Nombre, DNI, Email y Carrera son obligatorios']);
+  echo json_encode(['success'=>false,'message'=>'Nombre, DNI, Email y Carrera son obligatorios']);
   exit;
 }
 
@@ -53,12 +49,11 @@ try {
   $pdo = new PDO("mysql:host=localhost;dbname=maraton_db;charset=utf8", "root", "");
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-  // evitar DNI duplicado
   $st = $pdo->prepare("SELECT id FROM inscripciones WHERE dni = ? LIMIT 1");
   $st->execute([$dni]);
   if ($st->fetch()) {
     http_response_code(409);
-    echo json_encode(['success' => false, 'message' => 'DNI ya registrado']);
+    echo json_encode(['success'=>false,'message'=>'DNI ya registrado']);
     exit;
   }
 
@@ -79,12 +74,12 @@ try {
     $telefono_emergencia
   ]);
 
-  echo json_encode(['success' => true, 'id' => (int)$pdo->lastInsertId()]);
+  echo json_encode(['success'=>true,'id'=>(int)$pdo->lastInsertId()]);
   exit;
 
 } catch (Exception $e) {
-  error_log("inscripcion_create.php: " . $e->getMessage());
+  error_log("inscripcion_create.php: ".$e->getMessage());
   http_response_code(500);
-  echo json_encode(['success' => false, 'message' => 'Error interno']);
+  echo json_encode(['success'=>false,'message'=>'Error interno']);
   exit;
 }
