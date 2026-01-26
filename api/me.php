@@ -1,5 +1,4 @@
 <?php
-session_set_cookie_params(0, '/');
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
