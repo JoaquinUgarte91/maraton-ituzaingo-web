@@ -6,6 +6,115 @@
   <title>Maratón Ituzaingó 2026</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .hidden {
+      display: none !important;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .loading-spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #0d6efd;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 15px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    #qr-container {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      margin: 30px 0;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+      border: 1px solid #e9ecef;
+    }
+    
+    #qr-container h3 {
+      color: #0d6efd;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    #qr img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .info-adicional {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 25px 0;
+      border-left: 4px solid #0d6efd;
+    }
+    
+    .info-adicional h4 {
+      color: #0d6efd;
+      margin-bottom: 15px;
+    }
+    
+    .info-adicional ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+    
+    #download-btn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 25px;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(13,110,253,0.3);
+    }
+    
+    #download-btn:hover {
+      background: #0b5ed7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(13,110,253,0.4);
+    }
+    
+    #download-btn:disabled {
+      background: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .btn-calendario {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(37,117,252,0.4);
+      margin-top: 15px;
+    }
+    
+    .btn-calendario:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37,117,252,0.6);
+    }
+  </style>
 </head>
 <body>
 
@@ -20,7 +129,7 @@
       <ul>
         <li><a href="#inicio">Inicio</a></li>
         <li><a href="#fundamentacion">Fundamentación</a></li>
-        <li><a href="#recorridos">Recorridos</a></li>
+        <li><a href="#recorridos-detallados">Recorridos</a></li>
         <li><a href="#contactos">Contactos</a></li>
         <li><a href="#form-section">Inscribirse</a></li>
         <li><a href="#redes">Redes</a></li>
@@ -226,7 +335,7 @@
       <p>Tu código QR para retirar el kit:</p>
       <div id="qr"></div>
       
-      <div class="info-adicional">
+      <div class="info-adicional" style="display:none;">
         <h4>📋 Información importante para retirar tu kit:</h4>
         <p><strong>Fechas de retiro:</strong> 4, 5 y 6 de marzo de 2026 de 9:00 a 18:00 hs</p>
         <p><strong>Lugar:</strong> A confirmar por email</p>
@@ -245,7 +354,7 @@
         </a>
       </div>
       
-      <button id="download-btn">Descargar QR</button>
+      <button id="download-btn" style="display:none;">Descargar QR</button>
     </div>
   </section>
 
@@ -296,43 +405,7 @@
   <script src="script.js"></script>
 
   <!-- Botón flotante para subir -->
-  <button id="btn-top">↑</button>
-
-  <script>
-    const btnTop = document.getElementById("btn-top");
-
-    window.onscroll = function () {
-      if (document.documentElement.scrollTop > 200) {
-        btnTop.style.display = "block";
-      } else {
-        btnTop.style.display = "none";
-      }
-    };
-
-    btnTop.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    // JavaScript para los tabs de recorridos
-    document.addEventListener('DOMContentLoaded', function() {
-      const tabButtons = document.querySelectorAll('.tab-button');
-      const tabPanes = document.querySelectorAll('.tab-pane');
-      
-      tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const targetTab = this.getAttribute('data-tab');
-          
-          // Remover clase active de todos los botones y paneles
-          tabButtons.forEach(btn => btn.classList.remove('active'));
-          tabPanes.forEach(pane => pane.classList.remove('active'));
-          
-          // Agregar clase active al botón y panel correspondiente
-          this.classList.add('active');
-          document.getElementById(targetTab).classList.add('active');
-        });
-      });
-    });
-  </script>
+  <button id="btn-top" style="display:none;">↑</button>
 
 </body>
 </html>
