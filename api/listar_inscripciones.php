@@ -9,6 +9,9 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
+// ✅ Rol del admin logueado
+$adminRole = $_SESSION['admin_role'] ?? null;
+
 // Configuración del evento (opcional, por consistencia)
 include '../includes/config.php';
 // Conexión DB
@@ -35,6 +38,14 @@ $order = $order === 'ASC' ? 'ASC' : 'DESC';
 $whereParts = [];
 $params = [];
 $types = '';
+
+// 🔒 FORZAR 10k PARA admin_externo (BACK REAL)
+if ($adminRole === 'admin_externo') {
+    $whereParts[] = "carrera = ?";
+    $params[] = '10km';
+    $types .= 's';
+}
+
 
 // q
 if ($q !== '') {

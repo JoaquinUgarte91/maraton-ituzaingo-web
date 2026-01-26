@@ -589,16 +589,18 @@ cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
 }
 
 async function editarInscripcion(id){
-const res = await fetch(`../api/inscripcion_get.php?id=${id}`, {
-credentials: 'include'
-});
-const data = await res.json().catch(() => ({}));
-if (!res.ok || !data.success) {
-alert(data.message || 'Error al traer inscripción');
-return;
+  const res = await fetch(`../api/inscripcion_get.php?id=${id}`, {
+    credentials: 'include'
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    alert(data.message || 'Error al traer inscripción');
+    return;
+  }
+  // En vez de prompts, mostramos la vista Editar
+  renderEditarInscripcion(data.item);
 }
-// En vez de prompts, mostramos la vista Editar
-renderEditarInscripcion(data.item);
+
 }
 
 (function addModalStyles(){
@@ -685,136 +687,166 @@ document.body.appendChild(backdrop);
 }
 
 async function eliminarInscripcion(id){
-const ok = await abrirModalConfirmacion({
-titulo: 'Eliminar inscripción',
-mensaje: '¿Seguro que querés eliminar esta inscripción? Esta acción no se puede deshacer.',
-textoConfirmar: 'Eliminar',
-textoCancelar: 'Cancelar',
-danger: true
-});
-if (!ok) return;
-try {
-const del = await fetch('../api/inscripcion_delete.php', {
-method:'POST',
-headers:{'Content-Type':'application/json'},
-credentials:'include',
-body: JSON.stringify({ id })
-});
-const delData = await del.json().catch(()=> ({}));
-if (!del.ok || !delData.success) {
-alert(delData.message || 'No se pudo eliminar');
-return;
-}
-// refrescar listado (manteniendo filtro)
-cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
-} catch (e) {
-console.error(e);
-alert('Error de conexión con el servidor');
-}
+  const ok = await abrirModalConfirmacion({
+    titulo: 'Eliminar inscripción',
+    mensaje: '¿Seguro que querés eliminar esta inscripción? Esta acción no se puede deshacer.',
+    textoConfirmar: 'Eliminar',
+    textoCancelar: 'Cancelar',
+    danger: true
+  });
+  if (!ok) return;
+
+  try {
+    const del = await fetch('../api/inscripcion_delete.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({ id })
+    });
+    const delData = await del.json().catch(()=> ({}));
+    if (!del.ok || !delData.success) {
+      alert(delData.message || 'No se pudo eliminar');
+      return;
+    }
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  } catch (e) {
+    console.error(e);
+    alert('Error de conexión con el servidor');
+  }
 }
 
 async function toggleKitRetiro(id, value) {
-const msg = value === 1
-? '¿Confirmar que el usuario retiró el kit?'
-: '¿Desmarcar retiro de kit?';
-if (!confirm(msg)) return;
-const res = await fetch('../api/kit_toggle.php', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-credentials: 'include',
-body: JSON.stringify({ id, value })
-});
-const data = await res.json().catch(() => ({}));
-if (!res.ok || !data.success) {
-alert(data.message || 'No se pudo actualizar el estado del kit');
-return;
-}
-// ✅ refrescar trayendo el usuario actualizado
-const get = await fetch(`../api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
-const getData = await get.json().catch(() => ({}));
-if (get.ok && getData.success) {
-renderDetalleInscripcion(getData.item);
-} else {
-// fallback
-cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
-}
+  const msg = value === 1
+    ? '¿Confirmar que el usuario retiró el kit?'
+    : '¿Desmarcar retiro de kit?';
+
+  const ok = await abrirModalConfirmacion({
+    titulo: 'Retiro de kit',
+    mensaje: msg,
+    textoConfirmar: 'Confirmar',
+    textoCancelar: 'Cancelar',
+    danger: false
+  });
+  if (!ok) return;
+
+  const res = await fetch('../api/kit_toggle.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id, value })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    alert(data.message || 'No se pudo actualizar el estado del kit');
+    return;
+  }
+
+  const get = await fetch(`../api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+  const getData = await get.json().catch(() => ({}));
+  if (get.ok && getData.success) {
+    renderDetalleInscripcion(getData.item);
+  } else {
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  }
 }
 
 function renderDetalleInscripcion(u){
-const main = document.getElementById('main-content');
-const v = (x) => esc(x ?? '');
-const fecha = (x) => v(formatearFecha(x));
-main.innerHTML = `
-<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
-<h2 style="margin:0">Inscripción #${v(u.id)}</h2>
-<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-<button id="btnVolverListado" class="btn-mini">Volver</button>
-<button id="btnEditarDesdeVer" class="btn-mini">Editar</button>
-<button id="btnEliminarDesdeVer" class="btn-mini danger">Eliminar</button>
-<button id="btnKitToggle" class="btn-mini">Validar retiro kit</button>
-</div>
-</div>
-<div class="card" style="margin-top:16px">
-<div class="header">Datos personales</div>
-<div class="content">
-<table class="simple">
-<tbody>
-<tr><th style="width:240px">Nombre</th><td>${v(u.nombre)}</td></tr>
-<tr><th>DNI</th><td>${v(u.dni)}</td></tr>
-<tr><th>Email</th><td>${v(u.email)}</td></tr>
-<tr><th>Fecha nacimiento</th><td>${v(u.fecha_nacimiento)}</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="card">
-<div class="header">Inscripción</div>
-<div class="content">
-<table class="simple">
-<tbody>
-<tr><th style="width:240px">Carrera</th><td>${v(u.carrera)}</td></tr>
-<tr><th>Talle remera</th><td>${v(u.talle_remera)}</td></tr>
-<tr><th>Fecha inscripción</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
-<tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
-<tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="card">
-<div class="header">Salud / Emergencia</div>
-<div class="content">
-<table class="simple">
-<tbody>
-<tr><th style="width:240px">Cobertura médica</th><td>${v(u.cobertura_medica)}</td></tr>
-<tr><th>N° afiliado</th><td>${v(u.numero_afiliado)}</td></tr>
-<tr><th>Teléfono emergencia</th><td>${v(u.telefono_emergencia)}</td></tr>
-</tbody>
-</table>
-</div>
-</div>
-`;
-document.getElementById('btnVolverListado')?.addEventListener('click', () => {
-cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
-});
-document.getElementById('btnEditarDesdeVer')?.addEventListener('click', () => {
-editarInscripcion(u.id);
-});
-document.getElementById('btnEliminarDesdeVer')?.addEventListener('click', () => {
-eliminarInscripcion(u.id);
-});
-// ✅ Botón validar kit (toggle)
-document.getElementById('btnKitToggle')?.addEventListener('click', () => {
-const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
-toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
-});
-// texto del botón según estado (opcional pero útil)
-const btnKit = document.getElementById('btnKitToggle');
-if (btnKit) {
-const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
-btnKit.textContent = yaRetiro ? 'Desmarcar retiro kit' : 'Validar retiro kit';
+  const main = document.getElementById('main-content');
+
+  const v = (x) => esc(x ?? '');
+  const fecha = (x) => v(formatearFecha(x));
+
+  // ✅ permisos según rol
+  const role = window.__ME__?.role ?? null;
+  const canWrite = role === 'admin_total'; // solo admin_total puede editar/eliminar
+  const canToggleKit = (role === 'admin_total' || role === 'admin_visualizador'); // externo NO
+
+  main.innerHTML = `
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
+      <h2 style="margin:0">Inscripción #${v(u.id)}</h2>
+
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <button id="btnVolverListado" class="btn-mini">Volver</button>
+
+        ${canWrite ? `<button id="btnEditarDesdeVer" class="btn-mini">Editar</button>` : ``}
+        ${canWrite ? `<button id="btnEliminarDesdeVer" class="btn-mini danger">Eliminar</button>` : ``}
+        ${canToggleKit ? `<button id="btnKitToggle" class="btn-mini">Validar retiro kit</button>` : ``}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Datos personales</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Nombre</th><td>${v(u.nombre)}</td></tr>
+            <tr><th>DNI</th><td>${v(u.dni)}</td></tr>
+            <tr><th>Email</th><td>${v(u.email)}</td></tr>
+            <tr><th>Fecha nacimiento</th><td>${v(u.fecha_nacimiento)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Inscripción</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Carrera</th><td>${v(u.carrera)}</td></tr>
+            <tr><th>Talle remera</th><td>${v(u.talle_remera)}</td></tr>
+            <tr><th>Fecha inscripción</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
+            <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
+            <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Salud / Emergencia</div>
+      <div class="content">
+        <table class="simple">
+          <tbody>
+            <tr><th style="width:240px">Cobertura médica</th><td>${v(u.cobertura_medica)}</td></tr>
+            <tr><th>N° afiliado</th><td>${v(u.numero_afiliado)}</td></tr>
+            <tr><th>Teléfono emergencia</th><td>${v(u.telefono_emergencia)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnVolverListado')?.addEventListener('click', () => {
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  });
+
+  document.getElementById('btnEditarDesdeVer')?.addEventListener('click', () => {
+    editarInscripcion(u.id);
+  });
+
+  document.getElementById('btnEliminarDesdeVer')?.addEventListener('click', () => {
+    eliminarInscripcion(u.id);
+  });
+
+  if (canToggleKit) {
+    document.getElementById('btnKitToggle')?.addEventListener('click', () => {
+      const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+      toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
+    });
+
+    const btnKit = document.getElementById('btnKitToggle');
+    if (btnKit) {
+      const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
+      btnKit.textContent = yaRetiro ? 'Desmarcar retiro kit' : 'Validar retiro kit';
+    }
+  }
+}
+
 }
 }
+
 
 function renderEditarInscripcion(u) {
 const main = document.getElementById('main-content');
@@ -1216,155 +1248,458 @@ const menuItem = document.getElementById(menuId);
 if (menuItem) menuItem.classList.add('active');
 }
 
+async function guardarNuevaInscripcion(){
+  const errEl = document.getElementById('cr_error');
+  const okEl = document.getElementById('cr_ok');
+  if (errEl) errEl.textContent = '';
+  if (okEl) okEl.textContent = '';
+
+  const payload = {
+    nombre: document.getElementById('cr_nombre')?.value.trim() || '',
+    dni: document.getElementById('cr_dni')?.value.trim() || '',
+    email: document.getElementById('cr_email')?.value.trim() || '',
+    carrera: document.getElementById('cr_carrera')?.value || '',
+    fecha_nacimiento: document.getElementById('cr_fecha_nacimiento')?.value || '',
+    talle_remera: document.getElementById('cr_talle_remera')?.value.trim() || '',
+    cobertura_medica: document.getElementById('cr_cobertura_medica')?.value.trim() || '',
+    numero_afiliado: document.getElementById('cr_numero_afiliado')?.value.trim() || '',
+    telefono_emergencia: document.getElementById('cr_telefono_emergencia')?.value.trim() || ''
+  };
+
+  if (!payload.nombre || !payload.dni || !payload.email || !payload.carrera) {
+    if (errEl) errEl.textContent = 'Nombre, DNI, Email y Carrera son obligatorios.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/public_html/api/inscripcion_create.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) {
+      if (errEl) errEl.textContent = data.message || 'No se pudo crear.';
+      return;
+    }
+
+    if (okEl) okEl.textContent = 'Creado ✅';
+
+    // ir a ver el detalle recién creado (si la API devuelve id)
+    if (data.id) {
+      verInscripcion(data.id);
+      return;
+    }
+
+    // si no devuelve id, volvemos al listado
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+
+  } catch (e) {
+    console.error(e);
+    if (errEl) errEl.textContent = 'Error de conexión con el servidor.';
+  }
+}
+
+// Menú → "Usuarios registrados"
+document.getElementById('menu-usuarios')?.addEventListener('click', e => {
+  e.preventDefault();
+  cargarInscripciones();
+});
+
+// Menú → "Administrar usuarios" (ADMINS)
+document.getElementById('menu-admins')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  renderAdmins();
+});
+
+// Dashboard simple
+document.querySelector('#menu-dashboard')?.addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('main-content').innerHTML = '<h2>Dashboard</h2>';
+});
+
+// ====== DASHBOARD HARDCODEADO ======
+(function addDashStyles(){
+  if (document.getElementById('dash-styles')) return;
+  const css = `
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px;margin:0 0 16px 0}
+    .kpi{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:16px}
+    .kpi .label{opacity:.7;font-size:13px}
+    .kpi .value{font-size:24px;font-weight:700;margin-top:6px}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);overflow:hidden;margin-top:16px}
+    .card .header{padding:12px 16px;border-bottom:1px solid #eee;font-weight:600}
+    .card .content{padding:16px}
+    table.simple{width:100%;border-collapse:collapse}
+    table.simple th, table.simple td{padding:10px 12px;border:1px solid #eee;text-align:left}
+    table.simple th{background:#2f323a;color:#fff}
+    @media (max-width:1000px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+  `;
+  const s=document.createElement('style'); s.id='dash-styles'; s.textContent=css;
+  document.head.appendChild(s);
+})();
+
+function renderDashboard(){
+  const main = document.getElementById('main-content');
+
+  const DEMO = {
+    total: 342, k10: 210, k3: 132, hoy: 8,
+    ultimas: [
+      { nombre:'Ana González', dni:'12345678', email:'ana@example.com', carrera:'10km', fecha:'2025-09-20 10:21:00' },
+      { nombre:'Luis Pérez', dni:'23456789', email:'luis@example.com', carrera:'3km', fecha:'2025-09-20 09:15:10' },
+      { nombre:'María Rodríguez', dni:'34567890', email:'maria@example.com', carrera:'Kids', fecha:'2025-09-19 18:03:34' },
+    ]
+  };
+
+  main.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0">Dashboard (demo)</h2>
+      <span style="opacity:.7;font-size:12px">Actualizado: ${hoyYYYYMMDD()}</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="label"><i class="fas fa-users"></i> Total</div><div class="value">${DEMO.total}</div></div>
+      <div class="kpi"><div class="label"><i class="fas fa-running"></i> 10km</div><div class="value">${DEMO.k10}</div></div>
+      <div class="kpi"><div class="label"><i class="fas fa-shoe-prints"></i> 3km</div><div class="value">${DEMO.k3}</div></div>
+      <div class="kpi"><div class="label"><i class="far fa-calendar-check"></i> Hoy</div><div class="value">${DEMO.hoy}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="header">Últimas inscripciones (demo)</div>
+      <div class="content">
+        <table class="simple">
+          <thead><tr><th>Nombre</th><th>DNI</th><th>Email</th><th>Carrera</th><th>Fecha</th></tr></thead>
+          <tbody>
+            ${DEMO.ultimas.map(u=>`
+              <tr>
+                <td>${esc(u.nombre)}</td>
+                <td>${esc(u.dni)}</td>
+                <td>${esc(u.email)}</td>
+                <td>${esc(u.carrera)}</td>
+                <td>${formatearFecha(u.fecha)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// Click del menú Dashboard → render demo
+document.querySelector('#menu-dashboard')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  renderDashboard();
+});
+
+// Mostrar dashboard al cargar
+document.addEventListener('DOMContentLoaded', renderDashboard);
+
 // =======================
 // VISTA: MARATONES (CSV históricos)
 // =======================
 function renderMaratones() {
-const main = document.getElementById('main-content');
-main.innerHTML = `
-<h2>Maratones (histórico)</h2>
-<div style="margin-top:12px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
-<p style="margin:0 0 10px 0; opacity:.8">
-Importá un CSV con columnas:
-<code>edicion,nombre,dni,email,carrera,fecha_inscripcion</code>
-</p>
-<input id="csvFile" type="file" accept=".csv" />
-<button id="btnImportarCsv" type="button"
-style="margin-left:8px; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
-Importar CSV
-</button>
-<div id="importResult" style="margin-top:12px;"></div>
-</div>
-<div style="margin-top:16px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
-<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-<h3 style="margin:0">Listado histórico</h3>
-<select id="filtroEdicion" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
-<option value="">Todas las ediciones</option>
-</select>
-<input id="buscarHistorico" type="search" placeholder="Buscar por nombre/DNI/email/carrera"
-style="padding:8px; border-radius:8px; border:1px solid #ddd; min-width:260px" />
-<span id="histTotal" style="opacity:.7"></span>
-</div>
-<div id="histTabla" style="margin-top:12px;">Cargando...</div>
-</div>
-`;
-document.getElementById('btnImportarCsv').addEventListener('click', importarHistoricoCSV);
-// cargar listado inicial
-cargarHistorico();
-// eventos filtros
-document.getElementById('buscarHistorico').addEventListener('change', () => cargarHistorico({ page: 1 }));
-document.getElementById('filtroEdicion').addEventListener('change', () => cargarHistorico({ page: 1 }));
+  const main = document.getElementById('main-content');
+
+  main.innerHTML = `
+    <h2>Maratones (histórico)</h2>
+
+    <div style="margin-top:12px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
+      <p style="margin:0 0 10px 0; opacity:.8">
+        Importá un CSV con columnas:
+        <code>edicion,nombre,dni,email,carrera,fecha_inscripcion</code>
+      </p>
+
+      <input id="csvFile" type="file" accept=".csv" />
+      <button id="btnImportarCsv" type="button"
+              style="margin-left:8px; padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
+        Importar CSV
+      </button>
+
+      <div id="importResult" style="margin-top:12px;"></div>
+    </div>
+
+    <div style="margin-top:16px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+        <h3 style="margin:0">Listado histórico</h3>
+
+        <select id="filtroEdicion" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+          <option value="">Todas las ediciones</option>
+        </select>
+
+        <input id="buscarHistorico" type="search" placeholder="Buscar por nombre/DNI/email/carrera"
+               style="padding:8px; border-radius:8px; border:1px solid #ddd; min-width:260px" />
+
+        <span id="histTotal" style="opacity:.7"></span>
+      </div>
+
+      <div id="histTabla" style="margin-top:12px;">Cargando...</div>
+    </div>
+  `;
+
+  document.getElementById('btnImportarCsv')?.addEventListener('click', importarHistoricoCSV);
+
+  // cargar listado inicial
+  cargarHistorico();
+
+  // eventos filtros
+  document.getElementById('buscarHistorico')?.addEventListener('change', () => cargarHistorico({ page: 1 }));
+  document.getElementById('filtroEdicion')?.addEventListener('change', () => cargarHistorico({ page: 1 }));
 }
 
 async function importarHistoricoCSV() {
-const fileInput = document.getElementById('csvFile');
-const resultBox = document.getElementById('importResult');
-resultBox.innerHTML = '';
-const file = fileInput.files?.[0];
-if (!file) {
-resultBox.innerHTML = `<p style="color:#b00020;margin:0">Seleccioná un archivo .csv</p>`;
-return;
-}
-const fd = new FormData();
-fd.append('csv', file);
-resultBox.innerHTML = `<p style="margin:0;opacity:.8">Importando...</p>`;
-try {
-const res = await fetch('../api/historico_importar.php', {
-method: 'POST',
-body: fd,
-credentials: 'include'
-});
-const data = await res.json().catch(() => ({}));
-if (!res.ok || !data.success) {
-resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(data.message || 'No se pudo importar')}</p>`;
-return;
-}
-const inserted = data.inserted ?? 0;
-const errors = Array.isArray(data.errors) ? data.errors : [];
-resultBox.innerHTML = `
-<p style="margin:0;color:#0a7a2f"><strong>OK</strong> Importados: ${inserted}</p>
-${errors.length ? `
-<details style="margin-top:8px">
-<summary style="cursor:pointer;color:#b00020">Ver errores (${errors.length})</summary>
-<ul style="margin:8px 0 0 18px">
-${errors.map(e => `<li>${esc(e)}</li>`).join('')}
-</ul>
-</details>
-` : `<p style="margin:6px 0 0 0;opacity:.8">Sin errores.</p>`}
-`;
-await cargarHistorico({ page: 1 });
-} catch (e) {
-console.error(e);
-resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error de conexión con el servidor</p>`;
-}
+  const fileInput = document.getElementById('csvFile');
+  const resultBox = document.getElementById('importResult');
+  if (!resultBox) return;
+
+  resultBox.innerHTML = '';
+
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    resultBox.innerHTML = `<p style="color:#b00020;margin:0">Seleccioná un archivo .csv</p>`;
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('csv', file);
+
+  resultBox.innerHTML = `<p style="margin:0;opacity:.8">Importando...</p>`;
+
+  try {
+    const res = await fetch('/public_html/api/historico_importar.php', {
+      method: 'POST',
+      body: fd,
+      credentials: 'include'
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.success) {
+      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(data.message || 'No se pudo importar')}</p>`;
+      return;
+    }
+
+    const inserted = data.inserted ?? 0;
+    const errors = Array.isArray(data.errors) ? data.errors : [];
+
+    resultBox.innerHTML = `
+      <p style="margin:0;color:#0a7a2f"><strong>OK</strong> Importados: ${inserted}</p>
+      ${errors.length ? `
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;color:#b00020">Ver errores (${errors.length})</summary>
+          <ul style="margin:8px 0 0 18px">
+            ${errors.map(e => `<li>${esc(e)}</li>`).join('')}
+          </ul>
+        </details>
+      ` : `<p style="margin:6px 0 0 0;opacity:.8">Sin errores.</p>`}
+    `;
+    await cargarHistorico({ page: 1 });
+
+  } catch (e) {
+    console.error(e);
+    resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error de conexión con el servidor</p>`;
+  }
 }
 
 let historicoFiltro = { edicion: '', q: '', page: 1, pageSize: 50 };
+
 async function cargarHistorico({ page } = {}) {
-const tabla = document.getElementById('histTabla');
-const totalEl = document.getElementById('histTotal');
-const selEd = document.getElementById('filtroEdicion');
-const inputQ = document.getElementById('buscarHistorico');
-if (!tabla || !totalEl || !selEd || !inputQ) return;
-if (page) historicoFiltro.page = page;
-historicoFiltro.q = inputQ.value.trim();
-historicoFiltro.edicion = selEd.value;
-const offset = (historicoFiltro.page - 1) * historicoFiltro.pageSize;
-tabla.innerHTML = 'Cargando...';
-try {
-const url = `../api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
-const res = await fetch(url, { credentials: 'include' });
-const data = await res.json().catch(() => ({}));
-if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar histórico');
-// cargar opciones de ediciones una vez
-if (selEd.options.length <= 1 && Array.isArray(data.ediciones)) {
-data.ediciones.forEach(ed => {
-const opt = document.createElement('option');
-opt.value = String(ed);
-opt.textContent = String(ed);
-selEd.appendChild(opt);
-});
-}
-totalEl.textContent = `Total: ${data.total ?? 0}`;
-const items = Array.isArray(data.items) ? data.items : [];
-const rows = items.map(r => `
-<tr>
-<td>${esc(r.edicion)}</td>
-<td>${esc(r.nombre)}</td>
-<td>${esc(r.dni)}</td>
-<td>${esc(r.email)}</td>
-<td>${esc(r.carrera)}</td>
-<td>${formatearFecha(r.fecha_inscripcion)}</td>
-</tr>
-`).join('');
-tabla.innerHTML = `
-<table style="width:100%; border-collapse:collapse">
-<thead>
-<tr>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Edición</th>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Nombre</th>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">DNI</th>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Email</th>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Carrera</th>
-<th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Fecha inscripción</th>
-</tr>
-</thead>
-<tbody>
-${rows || `<tr><td colspan="6" style="padding:16px; text-align:center; border:1px solid #eee;">Sin datos</td></tr>`}
-</tbody>
-</table>
-`;
-} catch (e) {
-tabla.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
-}
+  const tabla = document.getElementById('histTabla');
+  const totalEl = document.getElementById('histTotal');
+  const selEd = document.getElementById('filtroEdicion');
+  const inputQ = document.getElementById('buscarHistorico');
+
+  if (!tabla || !totalEl || !selEd || !inputQ) return;
+
+  if (page) historicoFiltro.page = page;
+  historicoFiltro.q = inputQ.value.trim();
+  historicoFiltro.edicion = selEd.value;
+
+  const offset = (historicoFiltro.page - 1) * historicoFiltro.pageSize;
+  tabla.innerHTML = 'Cargando...';
+
+  try {
+    const url = `/public_html/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
+    const res = await fetch(url, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar histórico');
+
+    // cargar opciones de ediciones una vez
+    if (selEd.options.length <= 1 && Array.isArray(data.ediciones)) {
+      data.ediciones.forEach(ed => {
+        const opt = document.createElement('option');
+        opt.value = String(ed);
+        opt.textContent = String(ed);
+        selEd.appendChild(opt);
+      });
+    }
+
+    totalEl.textContent = `Total: ${data.total ?? 0}`;
+
+    const items = Array.isArray(data.items) ? data.items : [];
+    const rows = items.map(r => `
+      <tr>
+        <td>${esc(r.edicion)}</td>
+        <td>${esc(r.nombre)}</td>
+        <td>${esc(r.dni)}</td>
+        <td>${esc(r.email)}</td>
+        <td>${esc(r.carrera)}</td>
+        <td>${formatearFecha(r.fecha_inscripcion)}</td>
+      </tr>
+    `).join('');
+
+    tabla.innerHTML = `
+      <table style="width:100%; border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Edición</th>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Nombre</th>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">DNI</th>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Email</th>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Carrera</th>
+            <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Fecha inscripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="6" style="padding:16px; text-align:center; border:1px solid #eee;">Sin datos</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    tabla.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
+  }
 }
 
 // Click del menú "Maratones"
 document.getElementById('menu-maratones')?.addEventListener('click', (e) => {
-e.preventDefault();
-renderMaratones();
-actualizarMenuActivo('menu-maratones');
+  e.preventDefault();
+  renderMaratones();
+  actualizarMenuActivo?.('menu-maratones');
 });
-</script>
+
+// =======================
+// VISTA: ADMINISTRAR ADMINS
+// =======================
+async function renderAdmins() {
+  const main = document.getElementById('main-content');
+
+  const role = window.__ME__?.role;
+  if (role !== 'admin_total') {
+    main.innerHTML = `
+      <h2>Administrar usuarios</h2>
+      <p style="color:#b00020">No tenés permisos para acceder a esta pantalla.</p>
+    `;
+    return;
+  }
+
+  main.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0">Administrar usuarios (Admins)</h2>
+      <span style="opacity:.7">Solo admin_total</span>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Crear admin</div>
+      <div class="content">
+        <form id="formCrearAdmin" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input name="username" placeholder="username" required
+                 style="padding:10px;border:1px solid #ddd;border-radius:10px" />
+          <input name="password" type="password" placeholder="password" required
+                 style="padding:10px;border:1px solid #ddd;border-radius:10px" />
+          <select name="role" style="padding:10px;border:1px solid #ddd;border-radius:10px">
+            <option value="admin_total">admin_total</option>
+            <option value="admin_visualizador" selected>admin_visualizador</option>
+            <option value="admin_externo">admin_externo (solo 10k)</option>
+          </select>
+          <button class="btn-mini" type="submit">Crear</button>
+          <span id="adminsMsg" style="margin-left:8px"></span>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">Admins existentes</div>
+      <div class="content">
+        <div id="adminsTabla">Cargando...</div>
+      </div>
+    </div>
+  `;
+
+  await cargarAdminsTabla();
+
+  document.getElementById('formCrearAdmin')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('adminsMsg');
+    if (msg) { msg.textContent = ''; msg.style.color = ''; }
+
+    const fd = new FormData(e.target);
+    const payload = {
+      username: (fd.get('username') || '').toString().trim(),
+      password: (fd.get('password') || '').toString(),
+      role: (fd.get('role') || 'admin_visualizador').toString()
+    };
+
+    try {
+      const res = await fetch('/public_html/api/admins_create.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(()=> ({}));
+
+      if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo crear');
+
+      if (msg) { msg.style.color = '#0a7a2f'; msg.textContent = 'Admin creado ✅'; }
+      e.target.reset();
+      await cargarAdminsTabla();
+    } catch (err) {
+      if (msg) { msg.style.color = '#b00020'; msg.textContent = err.message; }
+    }
+  });
+}
+
+async function cargarAdminsTabla(){
+  const box = document.getElementById('adminsTabla');
+  if (!box) return;
+  box.textContent = 'Cargando...';
+
+  try {
+    const res = await fetch('/public_html/api/admins_list.php', { credentials:'include' });
+    const data = await res.json().catch(()=> ({}));
+
+    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo listar');
+
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    const rows = items.map(a => `
+      <tr>
+        <td>${esc(a.id)}</td>
+        <td>${esc(a.username)}</td>
+        <td>${esc(a.role || '')}</td>
+        <td>${esc(a.scope_kit || '')}</td>
+        <td>${a.is_active == 1 ? 'Sí' : 'No'}</td>
+        <td>${esc(a.created_at || '')}</td>
+      </tr>
+    `).join('');
+
+    box.innerHTML = `
+      <table class="simple">
+        <thead>
+          <tr>
+            <th>ID</th><th>Username</th><th>Rol</th><th>Scope</th><th>Activo</th><th>Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="6" style="padding:16px;text-align:center">Sin admins</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    box.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
+  }
+}
+
 </body>
 </html>
