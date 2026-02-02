@@ -95,7 +95,7 @@ async function enviarFormulario(e) {
         const result = await res.json();
 
         if (result.success) {
-            mostrarQR(result.qr_data, result.numero_corredor);
+            mostrarQR(result.qr_token, result.numero_corredor);
             mostrarMensaje('¡Inscripción exitosa!', 'success');
         } else {
             mostrarMensaje(result.message || 'Error desconocido', 'error');

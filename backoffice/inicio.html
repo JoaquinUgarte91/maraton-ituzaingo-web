@@ -6,6 +6,9 @@
   <title>Admin Panel</title>
   <link rel="stylesheet" href="inicio.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+
+
 </head>
 <body>
 
@@ -16,7 +19,7 @@
       <a href="#" class="nav-item" id="menu-usuarios"><i class="fas fa-inbox"></i> Usuarios registrados</a>
       <a href="#" class="nav-item" id="menu-maratones"><i class="fas fa-image"></i> Maratones</a>
       <a href="#" class="nav-item" id="menu-admins"><i class="fas fa-user-shield"></i> Administrar usuarios</a>
-      <a href="#" class="nav-item"><i class="fas fa-code"></i> Short Codes</a>
+      <a href="#" class="nav-item" id="menu-scan-qr"><i class="fas fa-qrcode"></i> Escanear QR</a>
       <a href="#" class="nav-item"><i class="fas fa-exclamation-circle"></i> Error Page</a>
       <a href="#" class="nav-item"><i class="fas fa-table"></i> Tables</a>
       <a href="#" class="nav-item"><i class="fas fa-map"></i> Maps</a>
@@ -73,6 +76,13 @@ window.__ME__ = null;
     if (menuMaratones && role === 'admin_externo') {
       menuMaratones.style.display = 'none';
     }
+
+    const menuScanQr = document.getElementById('menu-scan-qr');
+
+// Solo admin_total y admin_visualizador pueden escanear
+if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
+  menuScanQr.style.display = 'none';
+}
 
   } catch (e) {
     window.location.href = './index.html';
@@ -584,7 +594,7 @@ async function toggleKitRetiro(id, value) {
 
   // ✅ Esto SÍ debe estar permitido para visualizador/external
   if (canToggleKit) {
-  document.getElementById('btnKitbToggle')?.addEventListener('click', () => {
+  document.getElementById('btnKitToggle')?.addEventListener('click', () => {
     const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
     toggleKitRetiro(u.id, yaRetiro ? 0 : 1);
   });
@@ -1323,6 +1333,14 @@ async function cargarAdminsTabla(){
         <td>${esc(a.scope_kit || '')}</td>
         <td>${a.is_active == 1 ? 'Sí' : 'No'}</td>
         <td>${esc(a.created_at || '')}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-mini" data-admin-action="pass" data-id="${a.id}" data-username="${esc(a.username)}">
+            Cambiar pass
+          </button>
+          <button class="btn-mini danger" data-admin-action="delete" data-id="${a.id}" data-username="${esc(a.username)}">
+            Eliminar
+          </button>
+        </td>
       </tr>
     `).join('');
 
@@ -1330,19 +1348,313 @@ async function cargarAdminsTabla(){
       <table class="simple">
         <thead>
           <tr>
-            <th>ID</th><th>Username</th><th>Rol</th><th>Scope</th><th>Activo</th><th>Creado</th>
+            <th>ID</th><th>Username</th><th>Rol</th><th>Scope</th><th>Activo</th><th>Creado</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="6" style="padding:16px;text-align:center">Sin admins</td></tr>`}
+          ${rows || `<tr><td colspan="7" style="padding:16px;text-align:center">Sin admins</td></tr>`}
         </tbody>
       </table>
     `;
+
+    // Delegación de eventos (una sola vez)
+    box.querySelector('table')?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-admin-action][data-id]');
+      if (!btn) return;
+
+      const action = btn.dataset.adminAction;
+      const id = Number(btn.dataset.id);
+      const username = btn.dataset.username || '';
+
+      if (action === 'pass') {
+        await uiCambiarPasswordAdmin({ id, username });
+      }
+
+      if (action === 'delete') {
+        await uiEliminarAdmin({ id, username });
+      }
+    });
+
   } catch (e) {
     box.innerHTML = `<p style="color:#b00020;margin:0">Error: ${esc(e.message)}</p>`;
   }
 }
 
+async function uiCambiarPasswordAdmin({ id, username }) {
+  const newPass = prompt(`Nueva contraseña para "${username}" (mínimo 6 caracteres):`);
+  if (newPass == null) return; // cancel
+  if (newPass.trim().length < 6) {
+    alert('La contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/public_html/api/admins_update_password.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ id, password: newPass })
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo actualizar la contraseña');
+
+    alert('Contraseña actualizada ✅');
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function uiEliminarAdmin({ id, username }) {
+  // opcional: evitar borrarte a vos misma/o
+  const myId = window.__ME__?.id;
+  if (myId && Number(myId) === Number(id)) {
+    alert('No podés eliminar tu propio usuario mientras estás logueado.');
+    return;
+  }
+
+  const ok = confirm(`¿Eliminar (desactivar) al admin "${username}"?`);
+  if (!ok) return;
+
+  try {
+    const res = await fetch('/public_html/api/admins_delete.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ id })
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo eliminar');
+
+    alert('Admin eliminado (desactivado) ✅');
+    await cargarAdminsTabla();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+document.getElementById('menu-scan-qr')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  renderLectorQR();
+});
+
+function renderLectorQR(){
+  const main = document.getElementById('main-content');
+
+  main.innerHTML = `
+    <h2>Escanear QR (token cifrado)</h2>
+
+    <div class="card" style="margin-top:16px">
+      <div class="header">Escanear con cámara</div>
+      <div class="content">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px">
+          <button id="btnStartScan" class="btn-mini">Iniciar cámara</button>
+          <button id="btnStopScan" class="btn-mini" disabled>Detener</button>
+          <select id="cameraSelect" class="btn-mini" style="padding:8px 10px"></select>
+          <span id="scanStatus" style="opacity:.75"></span>
+        </div>
+
+        <div id="qrReader" style="width:min(420px,100%);"></div>
+
+        <div id="scanResult" style="margin-top:12px"></div>
+      </div>
+    </div>
+  `;
+
+  initQrScanner();
+}
+
+let __qrScanner = null;
+
+async function initQrScanner(){
+  const btnStart = document.getElementById('btnStartScan');
+  const btnStop  = document.getElementById('btnStopScan');
+  const statusEl = document.getElementById('scanStatus');
+  const resultEl = document.getElementById('scanResult');
+  const cameraSel = document.getElementById('cameraSelect');
+
+  if (!btnStart || !btnStop || !statusEl || !resultEl || !cameraSel) return;
+
+  resultEl.innerHTML = '';
+  statusEl.textContent = 'Listo para escanear.';
+
+  // Asegura que la lib esté cargada
+  if (typeof Html5Qrcode === 'undefined') {
+    statusEl.textContent = 'No cargó la librería de cámara (html5-qrcode).';
+    statusEl.style.color = '#b00020';
+    return;
+  }
+
+  // listar cámaras
+  try {
+    const devices = await Html5Qrcode.getCameras();
+    cameraSel.innerHTML = '';
+
+    if (!devices || devices.length === 0) {
+      statusEl.textContent = 'No se encontraron cámaras disponibles.';
+      statusEl.style.color = '#b00020';
+      return;
+    }
+
+    devices.forEach((d, i) => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.label || `Cámara ${i+1}`;
+      cameraSel.appendChild(opt);
+    });
+  } catch (e) {
+    statusEl.textContent = 'No se pudo acceder a cámaras (permiso denegado o no disponible).';
+    statusEl.style.color = '#b00020';
+    return;
+  }
+
+  btnStart.addEventListener('click', async () => {
+    resultEl.innerHTML = '';
+    statusEl.style.color = '';
+    statusEl.textContent = 'Iniciando cámara...';
+
+    // evita doble start
+    if (__qrScanner) {
+      try { await __qrScanner.stop(); } catch {}
+      __qrScanner = null;
+    }
+
+    __qrScanner = new Html5Qrcode("qrReader");
+    const cameraId = cameraSel.value;
+
+    btnStart.disabled = true;
+    btnStop.disabled = false;
+
+    try {
+      await __qrScanner.start(
+        cameraId,
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText) => {
+          // ✅ detectó QR
+          statusEl.textContent = 'QR detectado. Validando...';
+
+          // evitar leer 20 veces el mismo QR
+          await detenerScannerSilencioso();
+
+          // acá validamos en backend
+          await validarTokenQR(decodedText);
+        },
+        () => {
+          // onScanFailure: lo dejamos silencioso
+        }
+      );
+
+      statusEl.textContent = 'Cámara activa. Apuntá al QR...';
+    } catch (e) {
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      statusEl.textContent = 'Error iniciando cámara: ' + (e?.message || e);
+      statusEl.style.color = '#b00020';
+    }
+  });
+
+  btnStop.addEventListener('click', async () => {
+    await detenerScannerSilencioso();
+    statusEl.textContent = 'Escaneo detenido.';
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+  });
+
+  async function detenerScannerSilencioso(){
+    if (!__qrScanner) return;
+    try { await __qrScanner.stop(); } catch {}
+    try { await __qrScanner.clear(); } catch {}
+    __qrScanner = null;
+  }
+
+  async function validarTokenQR(token){
+  const resultEl = document.getElementById('scanResult');
+  const statusEl = document.getElementById('scanStatus');
+  const btnStart = document.getElementById('btnStartScan');
+  const btnStop  = document.getElementById('btnStopScan');
+
+  resultEl.innerHTML = '';
+
+  try {
+    // 1) Decodificar token -> traer inscripción
+    const res = await fetch('/public_html/api/qr_decode.php', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ token })
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo leer el QR');
+
+    const item = data.item;
+    const id = Number(item?.id || 0);
+    if (!id) throw new Error('Inscripción inválida');
+
+    // 2) Validar kit (setear retirado=1)
+    // Si ya lo tenés retirado, podés frenar acá o permitir "desmarcar".
+    const yaRetiro = (item.kit_retirado == 1 || item.kit_retirado === true);
+    if (yaRetiro) {
+      resultEl.innerHTML = `
+        <p style="color:#0a7a2f;margin:0"><strong>OK</strong> Este QR ya estaba validado ✅</p>
+        <div style="margin-top:12px">
+          <button id="btnScanAgain" class="btn-mini">Escanear otro</button>
+          <button id="btnVerFicha" class="btn-mini">Ver ficha</button>
+        </div>
+      `;
+      document.getElementById('btnScanAgain')?.addEventListener('click', () => {
+        statusEl.textContent = 'Listo para escanear.';
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+      });
+      document.getElementById('btnVerFicha')?.addEventListener('click', () => {
+        renderDetalleInscripcion(item);
+      });
+      return;
+    }
+
+    const upd = await fetch('/public_html/api/kit_toggle.php', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ id, value: 1 })
+    });
+
+    const updData = await upd.json().catch(()=> ({}));
+    if (!upd.ok || !updData.success) {
+      throw new Error(updData.message || 'No se pudo validar el kit');
+    }
+
+    // 3) Traer de nuevo la ficha actualizada (opcional pero recomendable)
+    const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
+    const getData = await get.json().catch(()=> ({}));
+    const updated = (get.ok && getData.success) ? getData.item : item;
+
+    statusEl.textContent = 'Kit validado ✅';
+
+    // mostrar ficha y botón escanear otro
+    renderDetalleInscripcion(updated);
+
+    // opcional: pequeño mensaje arriba o abajo
+    // (si querés mostrar en la misma pantalla del scanner en vez de renderDetalleInscripcion, decime)
+    
+  } catch (e) {
+    resultEl.innerHTML = `
+      <p style="color:#b00020;margin:0">Error: ${esc(e.message || e)}</p>
+      <div style="margin-top:12px">
+        <button id="btnScanAgain" class="btn-mini">Reintentar</button>
+      </div>
+    `;
+    document.getElementById('btnScanAgain')?.addEventListener('click', () => {
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      statusEl.textContent = 'Listo para escanear.';
+    });
+  }
+}
+
+}
 
   </script>
 </body>

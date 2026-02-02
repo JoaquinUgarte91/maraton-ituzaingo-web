@@ -18,6 +18,7 @@ require_once __DIR__ . '/../includes/db.php';
 
 $sql = "SELECT id, username, role, scope_kit, is_active, created_at
         FROM admins
+        WHERE is_active = 1
         ORDER BY created_at DESC";
 $res = $conexion->query($sql);
 
