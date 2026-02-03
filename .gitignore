@@ -20,3 +20,9 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+
+# Archivos de configuración sensibles
+includes/recaptcha_config.php
+includes/email_config.php
+includes/config.php
+includes/db.php
