@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Maratón Ituzaingó 2026</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -12,7 +13,7 @@
   <header>
     <div class="logo">
       <a href="https://www.miituzaingo.gov.ar/" class="logo">
-        <img src="imagenes/logo.svg" alt="Logo Municipalidad de Ituzaingó" />
+        <img src="imagenes/logos/logoMUNI.png" alt="Logo Municipalidad de Ituzaingó" />
       </a>
     </div>
     <nav>
@@ -28,31 +29,31 @@
   </header>
 
   <section class="hero" id="inicio">
-    <img src="imagenes/fondotipografico.svg" alt="Banner Maratón 2026" class="banner-full">
+    <img src="imagenes/banners/fondotipografico.svg" alt="Banner Maratón 2026" class="banner-full">
     <div class="arrow-down" onclick="document.getElementById('pasos').scrollIntoView({behavior: 'smooth'})">&#9660;</div>
   </section>
 
   <section class="pasos" id="pasos">
     <div class="paso">
-      <img src="imagenes/iconoFORM.svg" alt="Formulario Inscripción" class="paso-icono">
+      <img src="imagenes/logos/iconoFORM.svg" alt="Formulario Inscripción" class="paso-icono">
       <h4>Inscripción</h4>
       <p>Completar el formulario con los datos correspondientes</p>
     </div>
 
     <div class="paso">
-      <img src="imagenes/iconoQR.svg" alt="Código QR" class="paso-icono">
+      <img src="imagenes/logos/iconoQR.svg" alt="Código QR" class="paso-icono">
       <h4>Tu QR</h4>
       <p>Se te va a asignar un QR que vas a tener que llevar al momento de retirar tu kit de maratón</p>
     </div>
 
     <div class="paso">
-      <img src="imagenes/iconoDOCU.svg" alt="Documentación" class="paso-icono">
+      <img src="imagenes/logos/iconoDOCU.svg" alt="Documentación" class="paso-icono">
       <h4>Documentación</h4>
       <p>Presentar la documentación requerida para el retiro del kit</p>
     </div>
 
     <div class="paso">
-      <img src="imagenes/iconoAGENDA.svg" alt="Guardar Fecha" class="paso-icono">
+      <img src="imagenes/logos/iconoAGENDA.svg" alt="Guardar Fecha" class="paso-icono">
       <h4>Guardar fecha</h4>
       <p>Guardar la fecha con un recordatorio en tu calendario <a href="#fecha">AQUÍ</a></p>
     </div>
@@ -91,9 +92,9 @@
           <div class="recorrido-info">
             <h3>Recorrido de 10 Km</h3>
             <div class="recorrido-mapa">
-              <img src="imagenes/recorrido10k.jpeg" alt="Mapa del recorrido de 10Km">
+              <img src="imagenes/recorridos/MAPA10K-VECTORESOKq_Mesa de trabajo 1.png" alt="Mapa del recorrido de 10Km">
             </div>
-            <a href="imagenes/recorrido10k.jpeg" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
+            <a href="imagenes/recorridos/MAPA10K-VECTORESOKq_Mesa de trabajo 1.png" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
           </div>
         </div>
         
@@ -101,9 +102,9 @@
           <div class="recorrido-info">
             <h3>Recorrido de 3 Km</h3>
             <div class="recorrido-mapa">
-              <img src="imagenes/recorrido3k.jpeg" alt="Mapa del recorrido de 3Km">
+              <img src="imagenes/recorridos/MAPA3K-VECTORESOK3_Mesa de trabajo 1.png" alt="Mapa del recorrido de 3Km">
             </div>
-            <a href="imagenes/recorrido3k.jpeg" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
+            <a href="imagenes/recorridos/MAPA3K-VECTORESOK3_Mesa de trabajo 1.png" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
           </div>
         </div>
 
@@ -111,9 +112,9 @@
           <div class="recorrido-info">
             <h3>Recorrido de 1 Km (Kids)</h3>
             <div class="recorrido-mapa">
-              <img src="imagenes/recorrido1kKids.jpeg" alt="Mapa del recorrido de 1Km">
+              <img src="imagenes/recorridos/recorrido1kKids.jpeg" alt="Mapa del recorrido de 1Km">
             </div>
-            <a href="imagenes/recorrido1kKids.jpeg" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
+            <a href="imagenes/recorridos/recorrido1kKids.jpeg" class="btn-descargar" target="_blank" download>Descargar Mapa</a>
           </div>
         </div>
       </div>
@@ -164,7 +165,7 @@
           <label for="talle_remera">Talle de Remera:</label>
           <select id="talle_remera" name="talle_remera" required>
             <option value="">-- Seleccioná un talle --</option>
-            </select>
+          </select>
           <div class="error-message" id="talle_remera-error"></div>
         </div>
 
@@ -188,7 +189,7 @@
       </div>
 
       <div class="form-group">
-          <div class="g-recaptcha" data-sitekey="TU_SITE_KEY_AQUÍ"></div>
+          <div class="g-recaptcha" data-sitekey="6LfRyV8sAAAAABde5YegU_qZ5WQaeb8mg3A5jd5W"></div>
           <div class="error-message" id="captcha-error"></div>
       </div>
 
@@ -218,10 +219,20 @@
         </ul>
         <p><a href="#recorridos-detallados">📎 Ver mapas de recorrido</a></p>
         <p><a href="#fundamentacion">📖 Conocer la fundamentación de la maratón</a></p>
-        <a href="documentacion/deslinde.docx" 
-        id="download-deslinde-btn"  
-        download>
-            Descargar Deslinde de Responsabilidades
+        
+        <!-- ✅ Reglamento (siempre visible) -->
+        <a href="documentacion/Reglamento2026.pdf" class="btn-documento" download>
+            <i class="fas fa-file-alt"></i> Descargar Reglamento (PDF)
+        </a>
+        
+        <!-- ✅ Deslinde (solo adultos) -->
+        <a href="documentacion/Deslinde2026.pdf" id="btn-deslinde" class="btn-documento" download style="display:none;">
+            <i class="fas fa-file-signature"></i> Descargar Deslinde de Responsabilidades (PDF)
+        </a>
+        
+        <!-- ✅ Autorización (solo kids) -->
+        <a href="documentacion/Autorizacion_menores2026.pdf" id="btn-autorizacion" class="btn-documento" download style="display:none;">
+            <i class="fas fa-user-shield"></i> Descargar Autorización para Menores (PDF)
         </a>
       </div>
       
@@ -307,8 +318,8 @@
 
   <footer>
     <div class="footer-logos">
-      <img src="imagenes/logo.png" alt="Logo Municipalidad de Ituzaingó">
-      <img src="imagenes/logovioleta.png" alt="13º Maratón 2026">
+      <img src="imagenes/logos/logoMUNI.png" alt="Logo Municipalidad de Ituzaingó">
+      <img src="imagenes/logos/logovioleta.png" alt="13º Maratón 2026">
     </div>
     <p>Municipalidad de Ituzaingó © 2026 - Todos los derechos reservados</p>
   </footer>

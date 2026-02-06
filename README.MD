@@ -1,189 +1,181 @@
-# 🏃‍♀️ Maratón Ituzaingó 2026
+# 🏃‍♀️ Maratón Ituzaingó 2026 - Plataforma de Inscripción
 
-Sitio web oficial de la **13° Edición de la Maratón “Corremos por Más Derechos y Más Igualdad 2026”**, organizada por el **Consejo de Mujeres, Géneros, Diversidad, Niñeces y Adolescencias del Municipio de Ituzaingó**.
+![Estado](https://img.shields.io/badge/Estado-Producci%C3%B3n-green)
+![PHP](https://img.shields.io/badge/PHP-7.4%20%7C%208.x-blue)
+![DB](https://img.shields.io/badge/MySQL-MariaDB-orange)
 
----
+Sitio web oficial y API de gestión para la **13° Edición de la Maratón “Corremos por Más Derechos y Más Igualdad 2026”**, organizada por el **Consejo de Mujeres, Géneros, Diversidad, Niñeces y Adolescencias del Municipio de Ituzaingó**.
 
-## 📋 Características principales
-
-- ✅ Formulario de inscripción con validación en tiempo real  
-- ✅ Selección dinámica de talles según tipo de carrera (Kids / Adultos)  
-- ✅ Validación automática de edad  
-- ✅ Sistema anti-bots con **Google reCAPTCHA v2**  
-- ✅ Generación de **QR único** para retiro de kit  
-- ✅ Envío de email de confirmación al inscribirse  
-- ✅ Pestañas interactivas para recorridos:
-  - 10K  
-  - 3K  
-  - 1K Kids  
-- ✅ Diseño **responsive** (móvil, tablet y desktop)  
-- ✅ Integración con **Google Calendar**
+El sistema gestiona el alta de participantes, validación de reglas de negocio (edades/cupos), generación de credenciales QR y notificaciones vía correo electrónico transaccional.
 
 ---
 
-## ⚙️ Requisitos previos
+## 📋 Características Técnicas
 
-Antes de desplegar el proyecto, asegurarse de contar con:
-
-- Servidor web con **PHP 7.4 o superior** (Apache / Nginx)  
-- Base de datos **MySQL o MariaDB**  
-- Dominio configurado (ejemplo: `miituzaingo.gov.ar`)  
-- Acceso a **Google reCAPTCHA**  
-- Acceso a un servidor **SMTP** para envío de emails
-
----
-
-## 🚀 Instalación y despliegue
-
-### 1️⃣ Clonar el repositorio
-
-```bash
-git clone https://github.com/municipalidad-ituzaingo/maraton-2026.git
-cd maraton-2026
-```
+- **Arquitectura:** Frontend desacoplado (HTML / JS) consumiendo API REST (PHP)
+- **Seguridad:**
+  - Protección Anti-Bots mediante **Google reCAPTCHA v2**
+  - Sanitización de inputs y **Prepared Statements** (SQL Injection safe)
+  - Detección automática de entorno (Local vs Producción) para gestión de SSL
+- **Funcionalidades:**
+  - Validación de edad server-side según categoría (Kids / Adultos)
+  - **Generación de QR local** (no depende de APIs externas)
+  - **Email con QR incrustado (CID)** para evitar bloqueos en Outlook y Gmail
+- **Infraestructura:** Compatible con Linux (Ubuntu / CentOS) y Windows (XAMPP / IIS)
 
 ---
 
-## 🔐 Configuración de Google reCAPTCHA (OBLIGATORIO)
+## 📂 Estructura del Proyecto
 
-### 2️⃣ Obtener claves
-
-1. Ingresar a https://www.google.com/recaptcha/admin/create  
-2. Completar el formulario:
-   - **Label**: Maratón Ituzaingó 2026  
-   - **Tipo**: reCAPTCHA v2 → *I'm not a robot*  
-   - **Dominios**:
-     - `localhost`  
-     - `miituzaingo.gov.ar`  
-   - Activar **Send alerts to owners**
-3. Guardar:
-   - **Site Key**
-   - **Secret Key**
-
----
-
-### 3️⃣ Configurar reCAPTCHA en el proyecto
-
-Copiar el archivo de ejemplo:
-
-```bash
-cp includes/recaptcha_config.example.php includes/recaptcha_config.php
-```
-
-Editar `includes/recaptcha_config.php`:
-
-```php
-<?php
-define('RECAPTCHA_SITE_KEY', 'TU_SITE_KEY_REAL_AQUI');
-define('RECAPTCHA_SECRET_KEY', 'TU_SECRET_KEY_REAL_AQUI');
-```
-
-Editar `index.html` y reemplazar la Site Key:
-
-```html
-<div class="g-recaptcha" data-sitekey="TU_SITE_KEY_REAL_AQUI"></div>
-```
+~~~text
+/
+├── api/                  # Endpoints del Backend
+│   └── inscripcion.php   # Controlador principal del formulario
+├── includes/             # Lógica de negocio y configuraciones
+│   ├── PHPMailer/        # Librería de envíos SMTP
+│   ├── PHPQRCode/        # Librería gráfica de QR
+│   ├── config.php        # Constantes generales
+│   ├── db.php            # Conexión a Base de Datos (ignorado en git)
+│   ├── email_config.php  # Credenciales SMTP (ignorado en git)
+│   └── ...
+├── public/               # Frontend (acceso público)
+│   ├── documentacion/    # PDFs (Deslindes, Reglamentos)
+│   ├── imagenes/         # Assets gráficos
+│   ├── temp/             # ⚠️ Carpeta crítica para QRs temporales
+│   ├── index.html        # SPA del formulario
+│   └── script.js         # Lógica cliente
+└── docs/
+    └── database_schema.sql # Script de instalación DB
+~~~
 
 ---
 
-## 📧 Configuración de Email
+## ⚙️ Requisitos del Servidor
 
-### Paso 1: Obtener credenciales SMTP
+### Software
+- PHP **7.4 o superior**
+- MySQL **5.7+** o MariaDB **10.x**
 
-El municipio debe contar con acceso a un servidor SMTP. Existen tres alternativas:
+### Extensiones PHP obligatorias
+- `php-gd` → Generación de imágenes QR
+- `php-curl` → Conexión con Google reCAPTCHA
+- `php-mysqli` → Base de datos
+- `php-mbstring` → Manejo UTF-8
 
-#### **Opción A: Servidor SMTP del municipio (RECOMENDADO)** ✅
-- Utilizar el servidor oficial de correo del municipio  
-- Ejemplo: `smtp.miituzaingo.gov.ar`  
-- Solicitar credenciales al área de IT
-
-#### **Opción B: Gmail (alternativa temporal)** ⚠️
-- Más simple, pero menos profesional  
-- Requiere una **Contraseña de aplicación**  
-- Generarla desde: https://myaccount.google.com/apppasswords
-
-#### **Opción C: SendGrid (servicio profesional)** 🚀
-- Servicio de email transaccional confiable  
-- Plan gratuito: hasta **100 emails diarios**  
-- Registro en: https://sendgrid.com/
+### Red
+- Salida permitida a:
+  - Puerto SMTP **587 o 465**
+  - `google.com` (reCAPTCHA)
 
 ---
 
-### Paso 2: Configurar el archivo de Email
+## 🚀 Guía de Instalación y Despliegue
 
-Copiar el archivo de ejemplo:
+### 1. Despliegue de Código
 
-```bash
-cp includes/email_config.example.php includes/email_config.php
-```
-
-Editar `includes/email_config.php` y completar con los datos reales:
-
-```php
-<?php
-define('EMAIL_HOST', 'smtp.miituzaingo.gov.ar');                 // Servidor SMTP
-define('EMAIL_PORT', 587);                                      // Puerto SMTP
-define('EMAIL_USERNAME', 'maraton@miituzaingo.gov.ar');         // Usuario
-define('EMAIL_PASSWORD', 'TU_CONTRASEÑA');                      // Contraseña
-define('EMAIL_FROM', 'maraton@miituzaingo.gov.ar');             // Remitente
-define('EMAIL_FROM_NAME', 'Maratón Ituzaingó 2026');            // Nombre remitente
-define('EMAIL_REPLY_TO', 'Consejomujeresdeituzaingo@hotmail.com'); // Responder a
-```
+~~~bash
+git clone https://github.com/municipalidad-ituzaingo/maraton-2026.git .
+~~~
 
 ---
 
-### Paso 3: Probar el envío de Email
+### 2. Base de Datos
 
-1. Completar el formulario de inscripción  
-2. Verificar que llegue el email de confirmación  
-3. Confirmar que los caracteres especiales (tildes, ñ, acentos) se visualicen correctamente  
+Archivo: `docs/database_schema.sql`
 
----
-
-## 🗄️ Configuración de Base de Datos
-
-1. Editar los archivos:
-   - `includes/config.php`
-   - `includes/db.php`
-2. Configurar los datos de conexión a la base de datos del municipio.
-3. Estos archivos **no deben subirse al repositorio** (usar `.gitignore`).
+~~~bash
+mysql -u usuario -p nombre_base_datos < docs/database_schema.sql
+~~~
 
 ---
 
-## 🔧 Permisos de archivos (recomendado)
+### 3. Configuración de Credenciales (CRUCIAL)
 
-```bash
-chmod 755 api/
-chmod 644 api/*.php
-chmod 755 includes/
-```
+El repositorio no incluye contraseñas reales por seguridad.
 
----
+### A. Base de Datos
 
-## 🌐 Acceso al sitio
+Renombrar:
 
-Una vez configurado, el sitio estará disponible en:
+    includes/db.example.php → includes/db.php
 
-https://www.miituzaingo.gov.ar/maraton-2026/
-
----
-
-## ✅ Checklist final
-
-- reCAPTCHA funcionando correctamente  
-- Email de confirmación enviado correctamente  
-- Base de datos creada y conectada  
-- Archivos sensibles fuera de GitHub  
-- Formulario operativo y generando QR  
-- Recorridos 10K / 3K / 1K Kids funcionales  
-- Diseño responsive validado  
-- Enlaces y redes funcionando  
-- SSL activo (HTTPS)  
-- Dominio correctamente configurado  
+~~~php
+$conexion = new mysqli(
+  "localhost",
+  "USUARIO_DB",
+  "PASSWORD_DB",
+  "NOMBRE_DB"
+);
+~~~
 
 ---
 
-## 🏛️ Municipio de Ituzaingó
+### B. Configuración de Email SMTP
 
-Proyecto desarrollado para el **Municipio de Ituzaingó**  
-Consejo de Mujeres, Géneros, Diversidad, Niñeces y Adolescencias.
+Renombrar:
+
+    includes/email_config.example.php → includes/email_config.php
+
+~~~php
+define('EMAIL_HOST', 'smtp.miituzaingo.gov.ar');
+define('EMAIL_USERNAME', 'cuenta@miituzaingo.gov.ar');
+define('EMAIL_PASSWORD', 'contraseña_segura');
+define('EMAIL_PORT', 587);
+~~~
+
+---
+
+### C. Google reCAPTCHA
+
+Renombrar:
+
+    includes/recaptcha_config.example.php → includes/recaptcha_config.php
+
+Colocar la **Secret Key (server-side)**.
+
+---
+
+### 4. Permisos de Escritura (Linux)
+
+~~~bash
+mkdir -p public/temp
+chown -R www-data:www-data public/temp
+chmod -R 775 public/temp
+~~~
+
+---
+
+## 🛡️ Seguridad y Entorno Híbrido
+
+- **Modo Local (Dev):**
+  - SSL relajado
+  - Permite pruebas con SMTP y reCAPTCHA locales
+
+- **Modo Producción:**
+  - `CURLOPT_SSL_VERIFYPEER = true`
+  - `display_errors = 0`
+  - No se exponen rutas ni errores del servidor
+
+---
+
+## ✅ Checklist de Puesta en Producción
+
+- [ ] `includes/db.php` creado con credenciales reales  
+- [ ] `includes/recaptcha_config.php` con Secret Key válida  
+- [ ] Dominio autorizado en Google reCAPTCHA  
+- [ ] Carpeta `public/temp` con permisos de escritura  
+- [ ] Extensión `php-gd` instalada  
+- [ ] PDFs cargados en `public/documentacion/`  
+- [ ] Inscripción de prueba con recepción de QR por email  
+
+---
+
+## 📞 Soporte Técnico
+
+**Desarrollo y Mantenimiento**  
+Área: Informática Municipal / Desarrollo Web  
+Contacto: *[Insertar correo interno de soporte]*
+
+---
+
+© 2026 Municipalidad de Ituzaingó — Todos los derechos reservados.

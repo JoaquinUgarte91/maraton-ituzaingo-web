@@ -246,7 +246,7 @@ nav a:hover {
   /* IMPORTANTE: Cambiá 'fondo-maraton.jpg' por el nombre real de tu imagen */
   background-image: 
     linear-gradient(135deg, rgba(46, 139, 87, 0.85), rgba(138, 43, 226, 0.85)),
-    url('imagenes/Carrera.webp'); 
+    url('imagenes/banners/Carrera.webp'); 
     
   background-size: cover;
   background-position: center;
