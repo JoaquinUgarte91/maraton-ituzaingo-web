@@ -46,7 +46,7 @@ window.__ME__ = null;
 
 (async () => {
   try {
-    const res = await fetch('/public_html/api/me.php', {
+    const res = await fetch('/api/me.php', {
       credentials: 'include'
     });
 
@@ -96,7 +96,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   document.getElementById('btn-logout')?.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
-      await fetch('/public_html/api/logout.php', {
+      await fetch('/api/logout.php', {
         method: 'POST',
         credentials: 'include'
       });
@@ -109,7 +109,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   // LISTADO INSCRIPCIONES + CSV
   // ======================================================
 
-  const LISTAR_URL = '/public_html/api/listar_inscripciones.php';
+  const LISTAR_URL = '/api/listar_inscripciones.php';
   let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '' };
 
 
@@ -320,7 +320,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   main.innerHTML = `<h2>Ver inscripción</h2><p style="opacity:.8">Cargando...</p>`;
 
   try {
-    const res = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
+    const res = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
     const data = await res.json().catch(()=> ({}));
     if (!res.ok || !data.success) throw new Error(data.message || 'Error al traer inscripción');
 
@@ -340,7 +340,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
 
 
   async function editarInscripcion(id){
-  const res = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, {
+  const res = await fetch(`/api/inscripcion_get.php?id=${id}`, {
     credentials: 'include'
   });
 
@@ -456,7 +456,7 @@ function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar
   if (!ok) return;
 
   try {
-    const del = await fetch('/public_html/api/inscripcion_delete.php', {
+    const del = await fetch('/api/inscripcion_delete.php', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
@@ -485,7 +485,7 @@ async function toggleKitRetiro(id, value) {
 
   if (!confirm(msg)) return;
 
-  const res = await fetch('/public_html/api/kit_toggle.php', {
+  const res = await fetch('/api/kit_toggle.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -499,7 +499,7 @@ async function toggleKitRetiro(id, value) {
   }
 
   // ✅ refrescar trayendo el usuario actualizado
-  const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+  const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
   const getData = await get.json().catch(() => ({}));
   if (get.ok && getData.success) {
     renderDetalleInscripcion(getData.item);
@@ -863,7 +863,7 @@ async function guardarEdicionInscripcion(id) {
   }
 
   try {
-    const up = await fetch('/public_html/api/inscripcion_update.php', {
+    const up = await fetch('/api/inscripcion_update.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -879,7 +879,7 @@ async function guardarEdicionInscripcion(id) {
     if (okEl) okEl.textContent = 'Guardado ✅';
 
     // traer de nuevo y mostrar "Ver"
-    const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+    const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
     const getData = await get.json().catch(() => ({}));
     if (get.ok && getData.success) {
       renderDetalleInscripcion(getData.item);
@@ -918,7 +918,7 @@ async function guardarNuevaInscripcion(){
   }
 
   try {
-    const res = await fetch('/public_html/api/inscripcion_create.php', {
+    const res = await fetch('/api/inscripcion_create.php', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
@@ -1112,7 +1112,7 @@ async function guardarNuevaInscripcion(){
     resultBox.innerHTML = `<p style="margin:0;opacity:.8">Importando...</p>`;
 
     try {
-      const res = await fetch('/public_html/api/historico_importar.php', {
+      const res = await fetch('/api/historico_importar.php', {
         method: 'POST',
         body: fd,
         credentials: 'include'
@@ -1166,7 +1166,7 @@ async function guardarNuevaInscripcion(){
     tabla.innerHTML = 'Cargando...';
 
     try {
-      const url = `/public_html/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
+      const url = `/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
       const res = await fetch(url, { credentials: 'include' });
       const data = await res.json().catch(() => ({}));
 
@@ -1291,7 +1291,7 @@ async function renderAdmins() {
     };
 
     try {
-      const res = await fetch('/public_html/api/admins_create.php', {
+      const res = await fetch('/api/admins_create.php', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         credentials: 'include',
@@ -1318,7 +1318,7 @@ async function cargarAdminsTabla(){
   box.textContent = 'Cargando...';
 
   try {
-    const res = await fetch('/public_html/api/admins_list.php', { credentials:'include' });
+    const res = await fetch('/api/admins_list.php', { credentials:'include' });
     const data = await res.json().catch(()=> ({}));
 
     if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo listar');
@@ -1389,7 +1389,7 @@ async function uiCambiarPasswordAdmin({ id, username }) {
   }
 
   try {
-    const res = await fetch('/public_html/api/admins_update_password.php', {
+    const res = await fetch('/api/admins_update_password.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -1417,7 +1417,7 @@ async function uiEliminarAdmin({ id, username }) {
   if (!ok) return;
 
   try {
-    const res = await fetch('/public_html/api/admins_delete.php', {
+    const res = await fetch('/api/admins_delete.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -1578,7 +1578,7 @@ async function initQrScanner(){
 
   try {
     // 1) Decodificar token -> traer inscripción
-    const res = await fetch('/public_html/api/qr_decode.php', {
+    const res = await fetch('/api/qr_decode.php', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       credentials: 'include',
@@ -1614,7 +1614,7 @@ async function initQrScanner(){
       return;
     }
 
-    const upd = await fetch('/public_html/api/kit_toggle.php', {
+    const upd = await fetch('/api/kit_toggle.php', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       credentials: 'include',
@@ -1627,7 +1627,7 @@ async function initQrScanner(){
     }
 
     // 3) Traer de nuevo la ficha actualizada (opcional pero recomendable)
-    const get = await fetch(`/public_html/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
+    const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
     const getData = await get.json().catch(()=> ({}));
     const updated = (get.ok && getData.success) ? getData.item : item;
 

@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('password', password);
 
     try {
-      const res = await fetch('/public_html/api/login.php', {
+      const res = await fetch('/api/login.php', {
         method: 'POST',
         body: formData,
         credentials: 'include'

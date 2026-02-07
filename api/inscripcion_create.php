@@ -2,6 +2,8 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/../includes/db.php';
+
 // ✅ BLOQUEO REAL (BACK) — solo admin_total puede crear
 if (!isset($_SESSION['admin_id'])) {
   http_response_code(401);
@@ -46,23 +48,25 @@ $numero_afiliado     = $input['numero_afiliado'] ?? '';
 $telefono_emergencia = $input['telefono_emergencia'] ?? '';
 
 try {
-  $pdo = new PDO("mysql:host=localhost;dbname=maraton_db;charset=utf8", "root", "");
-  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-  $st = $pdo->prepare("SELECT id FROM inscripciones WHERE dni = ? LIMIT 1");
-  $st->execute([$dni]);
-  if ($st->fetch()) {
+  // 1) Validar DNI duplicado
+  $st = $conexion->prepare("SELECT id FROM inscripciones WHERE dni = ? LIMIT 1");
+  $st->bind_param("s", $dni);
+  $st->execute();
+  $res = $st->get_result();
+  if ($res->fetch_assoc()) {
     http_response_code(409);
     echo json_encode(['success'=>false,'message'=>'DNI ya registrado']);
     exit;
   }
 
+  // 2) Insert
   $sql = "INSERT INTO inscripciones
     (nombre,dni,email,carrera,fecha_nacimiento,talle_remera,cobertura_medica,numero_afiliado,telefono_emergencia,fecha_inscripcion)
     VALUES (?,?,?,?,?,?,?,?,?,NOW())";
 
-  $st = $pdo->prepare($sql);
-  $st->execute([
+  $st = $conexion->prepare($sql);
+  $st->bind_param(
+    "sssssssss",
     $nombre,
     $dni,
     $email,
@@ -72,12 +76,13 @@ try {
     $cobertura_medica,
     $numero_afiliado,
     $telefono_emergencia
-  ]);
+  );
+  $st->execute();
 
-  echo json_encode(['success'=>true,'id'=>(int)$pdo->lastInsertId()]);
+  echo json_encode(['success'=>true,'id'=>(int)$conexion->insert_id]);
   exit;
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
   error_log("inscripcion_create.php: ".$e->getMessage());
   http_response_code(500);
   echo json_encode(['success'=>false,'message'=>'Error interno']);
