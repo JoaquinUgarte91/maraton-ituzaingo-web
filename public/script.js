@@ -1,135 +1,223 @@
-// Se ejecuta cuando la página termina de cargar
+// ========================================
+// MARATÓN ITUZAINGÓ 2026 - SCRIPT COMPLETO
+// ========================================
+
+// Detectar ruta base si es necesaria, pero usaremos ruta relativa ../api
+const BASE_URL = window.location.pathname.split('/public/')[0].replace(/\/$/, '');
+
 document.addEventListener('DOMContentLoaded', () => {
     inicializarFormulario();
+    inicializarPestanasRecorridos();
+    inicializarBotonScroll();
+    inicializarValidacionesRealTime();
 });
 
-// Configura el formulario
+// ========================================
+// 1. LÓGICA DEL FORMULARIO
+// ========================================
+
 function inicializarFormulario() {
-    document.getElementById('carrera')?.addEventListener('change', (e) => {
-        actualizarTalles(e.target.value);
-    });
-
-    document.getElementById('fecha_nacimiento')?.addEventListener('change', () => {
-        validarEdad();
-    });
-
-    document.getElementById('formulario')?.addEventListener('submit', enviarFormulario);
-}
-
-// Muestra talles según si es Kids o adulto
-function actualizarTalles(carrera) {
-    const select = document.getElementById('talle_remera');
-    select.innerHTML = '<option value="">-- Seleccioná un talle --</option>';
-
-    if (carrera === 'Kids') {
-        ['6','8','10','12','14'].forEach(t => {
-            select.innerHTML += `<option value="Niño ${t}">Niño ${t}</option>`;
+    const carreraSelect = document.getElementById('carrera');
+    if (carreraSelect) {
+        carreraSelect.addEventListener('change', (e) => {
+            actualizarTalles(e.target.value);
+            validarEdad(); // Re-validar si cambia carrera
         });
-    } else if (carrera === '10km' || carrera === '3km') {
-        ['XS','S','M','L','XL','XXL','XXXL'].forEach(t => {
-            select.innerHTML += `<option value="Adulto ${t}">Adulto ${t}</option>`;
+    }
+
+    const fechaNacimientoInput = document.getElementById('fecha_nacimiento');
+    if (fechaNacimientoInput) {
+        fechaNacimientoInput.addEventListener('change', () => {
+            validarEdad();
         });
+    }
+
+    const formulario = document.getElementById('formulario');
+    if (formulario) {
+        formulario.addEventListener('submit', enviarFormulario);
     }
 }
 
-// Valida que la edad coincida con la carrera
+function actualizarTalles(carrera) {
+    const select = document.getElementById('talle_remera');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Seleccioná un talle --</option>';
+    
+    let opciones = [];
+    if (carrera === 'Kids') {
+        opciones = ['6', '8', '10', '12', '14'];
+        opciones.forEach(t => select.innerHTML += `<option value="Niño ${t}">Niño ${t}</option>`);
+    } else {
+        opciones = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+        opciones.forEach(t => select.innerHTML += `<option value="Adulto ${t}">Adulto ${t}</option>`);
+    }
+}
+
 function validarEdad() {
-    const fecha = document.getElementById('fecha_nacimiento').value;
-    const carrera = document.getElementById('carrera').value;
-    if (!fecha || !carrera) return true;
+    const fechaInput = document.getElementById('fecha_nacimiento');
+    const carreraSelect = document.getElementById('carrera');
+    
+    if (!fechaInput || !carreraSelect || !fechaInput.value || !carreraSelect.value) return true;
 
     const hoy = new Date();
-    const nac = new Date(fecha);
+    const nac = new Date(fechaInput.value);
     let edad = hoy.getFullYear() - nac.getFullYear();
     if (hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate())) edad--;
 
-    let error = document.getElementById('edad-error');
-    if (!error) {
-        error = document.createElement('div');
-        error.id = 'edad-error';
-        error.style.color = 'red';
-        error.style.fontSize = '0.9em';
-        error.style.marginTop = '0.3rem';
-        document.getElementById('fecha_nacimiento').parentNode.appendChild(error);
+    // Buscar o crear div de error
+    let errorDiv = document.getElementById('edad-error-msg');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'edad-error-msg';
+        errorDiv.style.cssText = "color: red; font-size: 0.9em; margin-top: 5px; font-weight: bold;";
+        fechaInput.parentNode.appendChild(errorDiv);
     }
 
-    if (carrera === 'Kids' && edad > 12) {
-        error.textContent = 'Kids es solo para menores de 13 años';
-        error.style.display = 'block';
+    if (carreraSelect.value === 'Kids' && edad > 12) {
+        errorDiv.textContent = '⚠️ Kids es solo para menores de 13 años';
+        errorDiv.style.display = 'block';
         return false;
     }
-    if (carrera !== 'Kids' && edad < 13) {
-        error.textContent = 'Carreras adultas son para mayores de 12 años';
-        error.style.display = 'block';
+    if (carreraSelect.value !== 'Kids' && edad < 13) {
+        errorDiv.textContent = '⚠️ Carreras adultas son para mayores de 12 años';
+        errorDiv.style.display = 'block';
         return false;
     }
-    error.style.display = 'none';
+    
+    errorDiv.style.display = 'none';
     return true;
 }
 
-// Envía los datos al servidor
+// ========================================
+// 2. ENVÍO DE DATOS
+// ========================================
+
 async function enviarFormulario(e) {
     e.preventDefault();
-    if (!validarEdad()) return;
+
+    // Validaciones Cliente
+    if (!validarEdad()) {
+        mostrarMensaje('Por favor verifica la fecha de nacimiento y la carrera', 'warning');
+        return;
+    }
+
+    const captchaResponse = grecaptcha.getResponse();
+    const captchaError = document.getElementById('captcha-error');
+    
+    if (!captchaResponse || captchaResponse.length === 0) {
+        if(captchaError) {
+            captchaError.textContent = "⚠️ Por favor confirma que no eres un robot.";
+            captchaError.style.display = 'block';
+        }
+        mostrarMensaje('Completa el CAPTCHA', 'warning');
+        return;
+    }
+    if(captchaError) captchaError.style.display = 'none';
+
+    // UI Loading
+    const loading = document.getElementById('loading');
+    const qrContainer = document.getElementById('qr-container');
+    const btnSubmit = document.getElementById('submit-btn');
+    
+    if (loading) loading.classList.remove('hidden');
+    if (qrContainer) qrContainer.classList.add('hidden');
+    btnSubmit.disabled = true;
 
     const formData = new FormData(document.getElementById('formulario'));
     const data = Object.fromEntries(formData);
-
-    const loading = document.getElementById('loading');
-    const qrContainer = document.getElementById('qr-container');
-    loading.classList.remove('hidden');
-    qrContainer.classList.add('hidden');
+    data.captcha_token = captchaResponse;
 
     try {
-        const res = await fetch('../api/inscripcion.php', {
+        // ✅ RUTA API CORREGIDA: Salir de public y entrar a api
+        const response = await fetch('../api/inscripcion.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
-        // ✅ Verifica que la respuesta HTTP sea exitosa
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
+        // Intentar parsear JSON
+        let result;
+        const textResponse = await response.text(); 
+        
+        try {
+            result = JSON.parse(textResponse);
+        } catch (err) {
+            console.error("Respuesta no JSON:", textResponse);
+            throw new Error("Error del servidor: Respuesta inválida (no JSON).");
         }
 
-        const result = await res.json();
-
-        if (result.success) {
-            mostrarQR(result.qr_token, result.numero_corredor);
+        if (response.ok && result.success) {
+            // ÉXITO
+            mostrarQR(result.qr_token, result.numero_corredor, result.carrera);
+            document.getElementById('formulario').reset();
+            grecaptcha.reset();
             mostrarMensaje('¡Inscripción exitosa!', 'success');
         } else {
+            // ERROR CONTROLADO
             mostrarMensaje(result.message || 'Error desconocido', 'error');
+            grecaptcha.reset();
         }
-    } catch (err) {
-        console.error('Error detallado:', err); // ← Verás el error real en la consola
-        mostrarMensaje('Error de conexión', 'error');
+
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensaje(error.message || 'Error de conexión', 'error');
+        grecaptcha.reset();
     } finally {
-        loading.classList.add('hidden');
+        if (loading) loading.classList.add('hidden');
+        btnSubmit.disabled = false;
     }
 }
 
-// Muestra el QR en la página
-function mostrarQR(datos, numero) {
-    document.getElementById('numero-corredor').textContent = numero;
-    const qrContainer = document.getElementById('qr');
-    qrContainer.innerHTML = '';
+// ========================================
+// 3. UTILIDADES VISUALES (QR, Mensajes, Tabs)
+// ========================================
+
+function mostrarQR(token, numero, carrera) {
+    const qrDiv = document.getElementById('qr');
+    const numeroSpan = document.getElementById('numero-corredor');
+    const container = document.getElementById('qr-container');
     
-    // ✅ Verifica que QRCode esté cargado
-    if (typeof QRCode === 'undefined') {
-        qrContainer.innerHTML = '<p style="color:red;">Error: librería QR no cargada.</p>';
-        return;
+    if (numeroSpan) numeroSpan.textContent = numero;
+    if (qrDiv) {
+        qrDiv.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(qrDiv, {
+                text: token,
+                width: 200,
+                height: 200,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } else {
+            qrDiv.innerHTML = 'QR Generado (Librería no cargada)';
+        }
     }
-
-    new QRCode(qrContainer, {
-        text: datos,
-        width: 200,
-        height: 200,
-        correctLevel: QRCode.CorrectLevel.H
-    });
-    document.getElementById('qr-container').classList.remove('hidden');
+    
+    if (container) {
+        container.classList.remove('hidden');
+        
+        // Manejar botones de descarga condicionales
+        setTimeout(() => {
+            const infoAdicional = container.querySelector('.info-adicional');
+            const downloadBtn = document.getElementById('download-btn');
+            if (infoAdicional) infoAdicional.style.display = 'block';
+            if (downloadBtn) downloadBtn.style.display = 'inline-block';
+            
+            const btnDeslinde = document.getElementById('btn-deslinde');
+            const btnAutorizacion = document.getElementById('btn-autorizacion');
+            
+            if (carrera === 'Kids') {
+                if (btnDeslinde) btnDeslinde.style.display = 'none';
+                if (btnAutorizacion) btnAutorizacion.style.display = 'inline-block';
+            } else {
+                if (btnDeslinde) btnDeslinde.style.display = 'inline-block';
+                if (btnAutorizacion) btnAutorizacion.style.display = 'none';
+            }
+        }, 500);
+    }
 }
 
-// Muestra mensajes temporales (éxito/error)
+// TU FUNCIÓN ORIGINAL DE MENSAJES (Restaurada)
 function mostrarMensaje(texto, tipo = 'info') {
     let msg = document.getElementById('mensaje-global');
     if (!msg) {
@@ -137,25 +225,76 @@ function mostrarMensaje(texto, tipo = 'info') {
         msg.id = 'mensaje-global';
         msg.style.cssText = `
             position: fixed; top: 20px; right: 20px; padding: 15px 20px;
-            border-radius: 5px; color: white; z-index: 1000; max-width: 300px;
-            font-family: Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-radius: 8px; color: white; z-index: 10000;
+            max-width: 350px; font-family: Arial, sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideIn 0.3s ease;
         `;
         document.body.appendChild(msg);
     }
-    msg.style.backgroundColor = 
-        tipo === 'success' ? '#4caf50' : 
-        tipo === 'error' ? '#f44336' : '#2196f3';
+    
+    const estilos = {
+        success: '#4caf50',
+        error: '#f44336',
+        info: '#2196f3',
+        warning: '#ff9800'
+    };
+    
+    msg.style.backgroundColor = estilos[tipo] || estilos.info;
     msg.textContent = texto;
     msg.style.display = 'block';
 
     setTimeout(() => {
-        msg.style.display = 'none';
+        msg.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            msg.style.display = 'none';
+            msg.style.animation = '';
+        }, 300);
     }, 5000);
 }
 
-// Agrega el evento al calendario de Google
-window.agregarACalendario = function() {
-    const fecha = '20260308T073000'; // Formato básico para Google Calendar
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Maratón Ituzaingó 2026&dates=${fecha}&details=13° Maratón "Corremos Por Más Derechos y Más Igualdad"&location=Plaza 20 de febrero, Las Heras y Zufriategui, Ituzaingó`;
-    window.open(url, '_blank');
-};
+function inicializarPestanasRecorridos() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    if (tabButtons.length === 0) return;
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            const targetId = button.getAttribute('data-tab');
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) targetPane.classList.add('active');
+        });
+    });
+}
+
+function inicializarBotonScroll() {
+    const btnTop = document.getElementById('btn-top');
+    if (!btnTop) return;
+    window.addEventListener('scroll', () => {
+        btnTop.style.display = (window.pageYOffset > 300) ? 'block' : 'none';
+    });
+    btnTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+function inicializarValidacionesRealTime() {
+    const dniInput = document.getElementById('dni');
+    if (dniInput) {
+        dniInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8);
+        });
+    }
+}
+
+// Inyectar estilos de animación si no existen
+(function() {
+    if (document.getElementById('animaciones-mensajes')) return;
+    const style = document.createElement('style');
+    style.id = 'animaciones-mensajes';
+    style.textContent = `
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+    `;
+    document.head.appendChild(style);
+})();

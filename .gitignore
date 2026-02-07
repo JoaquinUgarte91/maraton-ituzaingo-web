@@ -20,3 +20,21 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+
+# Archivos de configuración sensibles
+includes/recaptcha_config.php
+includes/email_config.php
+includes/config.php
+includes/db.php
+
+public/temp/*
+!public/temp/.gitkeep
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos temporales de logs
+*-errors.txt
+*.log
+
+# Ignorar la carpeta temporal de QRs si existe
+public/temp/
