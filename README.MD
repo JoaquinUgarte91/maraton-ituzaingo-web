@@ -174,7 +174,6 @@ chmod -R 775 public/temp
 
 **Desarrollo y Mantenimiento**  
 Área: Informática Municipal / Desarrollo Web  
-Contacto: *[Insertar correo interno de soporte]*
 
 ---
 
