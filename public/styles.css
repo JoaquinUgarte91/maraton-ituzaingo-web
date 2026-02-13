@@ -1,6 +1,7 @@
 /* =========================================
    1. IMPORTACIÓN DE FUENTES Y VARIABLES
 ========================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap');
 
 :root {
@@ -27,10 +28,17 @@
 /* =========================================
    2. ESTILOS GLOBALES
 ========================================= */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html, body {
+  min-height: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -39,6 +47,10 @@ body {
   font-family: 'Open Sans', sans-serif;
   line-height: 1.6;
   scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -47,65 +59,66 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.5px;
 }
 
-/* Estilos de Botones Globales */
-button, .btn-calendario, .btn-descargar, form button {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  border: none;
-  border-radius: 50px !important;
-  cursor: pointer;
-  transition: var(--transicion);
-  padding: 12px 30px !important;
-  text-transform: uppercase;
-  font-size: 0.9rem !important;
-  letter-spacing: 1px;
-  background: var(--gradiente-principal) !important;
-  color: var(--blanco) !important;
-  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
-  display: inline-block;
-  text-decoration: none;
-  text-align: center;
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
 }
 
-button:hover, .btn-calendario:hover, .btn-descargar:hover, form button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
-  filter: brightness(1.1);
-}
-
-button:disabled {
-  background: #ccc !important;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+section {
+  padding: 80px 0;
+  width: 100%;
 }
 
 /* =========================================
-   3. HEADER Y NAV
+   3. HEADER Y NAV - SIN ESPACIO INFERIOR
 ========================================= */
+
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 5%;
-  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 5% 0 !important; /* Eliminado padding inferior */
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.08);
   position: sticky;
   top: 0;
   z-index: 1000;
-  height: 70px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 0 !important;
+  border-bottom: none;
+}
+
+.logo {
+  flex: 0 0 auto;
 }
 
 .logo img {
-  height: 60px;
+  height: 55px;
   width: auto;
+  max-height: 55px;
+}
+
+nav {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 nav ul {
   list-style: none;
   display: flex;
-  gap: 25px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+nav li {
+  margin: 0;
 }
 
 nav a {
@@ -113,39 +126,52 @@ nav a {
   color: var(--gris-oscuro);
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   position: relative;
   transition: var(--transicion);
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 6px;
 }
 
 nav a:hover {
   color: var(--violeta-principal);
+  background-color: var(--violeta-claro);
 }
 
 /* =========================================
-   4. HERO SECTION (Banner Imagen Completa)
+   4. HERO SECTION - SIN ESPACIO SUPERIOR
 ========================================= */
+
 .hero {
   position: relative;
   width: 100%;
-  display: block; 
-  padding: 0;
-  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 !important; /* Eliminado todo el padding */
+  margin: 0 !important;
   background-color: var(--blanco);
+  min-height: auto;
+  overflow: visible;
+  margin-top: 0 !important;
 }
 
-/* Esta clase hace que la imagen se adapte pero NUNCA se recorte */
 .banner-full {
   width: 100%;
-  height: auto;       /* Altura automática para mantener proporción */
-  display: block;     /* Evita espacios en blanco debajo */
-  object-fit: contain; /* Muestra la imagen entera */
+  height: auto;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Flecha flotante */
 .arrow-down {
   position: absolute;
-  bottom: 40px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 2.5rem;
@@ -154,6 +180,7 @@ nav a:hover {
   z-index: 10;
   cursor: pointer;
   text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  margin-top: 0;
 }
 
 @keyframes bounce {
@@ -163,26 +190,31 @@ nav a:hover {
 }
 
 /* =========================================
-   5. SECCIÓN PASOS
+   5. SECCIÓN PASOS - RESPONSIVE
 ========================================= */
+
 .pasos {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 20px;
   flex-wrap: wrap;
-  padding: 80px 20px;
+  padding: 60px 20px;
   background: var(--blanco);
+  width: 100%;
 }
 
 .paso {
-  width: 220px;
-  padding: 30px 20px;
+  flex: 1 1 200px;
+  max-width: 250px;
+  min-width: 200px;
+  padding: 25px 15px;
   background: var(--blanco);
   border-radius: var(--radio-borde);
   box-shadow: var(--sombra-suave);
   text-align: center;
   transition: var(--transicion);
   border: 1px solid #eee;
+  margin: 10px;
 }
 
 .paso:hover {
@@ -190,91 +222,113 @@ nav a:hover {
   box-shadow: var(--sombra-hover);
 }
 
-/* Aseguramos que el contenedor del logo tenga espacio pero no empuje el alto del header */
-.logo {
-  position: relative; /* Necesario para que la imagen se posicione respecto a esto */
-  width: 140px;       /* Reservamos espacio horizontal para que el menú no se le pegue */
-  height: 100%;       /* Ocupa el alto del header */
-  display: flex;
-  align-items: flex-start; /* Alineamos arriba */
-}
-
-.logo img {
-  position: absolute;  /* Sacamos la imagen del flujo normal para que no agrande el header */
-  top: 0;              /* Pegado al borde superior */
-  left: 0;
-  
-  /* AUMENTAMOS EL TAMAÑO */
-  height: 110px;       /* Mucho más grande que los 70px del header (ajustalo a gusto) */
-  width: auto;         /* Mantiene la proporción */
-  
-  /* ESTÉTICA DE "TARJETA" O "MEDALLA" */
-  background-color: #ffffff; /* Fondo blanco para que las letras se lean bien */
-  padding: 10px 15px;        /* Espacio aireado alrededor del logo */
-  
-  /* Bordes redondeados solo abajo para efecto "etiqueta" */
-  border-radius: 0 0 15px 15px; 
-  
-  /* Sombra para que se destaque sobre el banner de fondo */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  
-  /* Aseguramos que esté por encima de todo */
-  z-index: 1100;
-  transition: all 0.3s ease;
-}
-
-/* Opcional: Efecto al pasar el mouse */
-.logo img:hover {
-  height: 120px; /* Crece un poquito más */
-  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.3);
-}
-
 .paso h4 {
   color: var(--violeta-principal);
   margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.paso p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.paso-icono {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 15px;
+  object-fit: contain;
 }
 
 /* =========================================
-   6. FUNDAMENTACIÓN Y TEXTOS (MODIFICADO)
+   6. FUNDAMENTACIÓN - RESPONSIVE
 ========================================= */
 
-/* Estilo específico para FUNDAMENTACIÓN con imagen de fondo */
 .fundamentacion {
-  padding: 100px 20px;
+  padding: 80px 0;
   position: relative;
-  
-  /* IMPORTANTE: Cambiá 'fondo-maraton.jpg' por el nombre real de tu imagen */
   background-image: 
     linear-gradient(135deg, rgba(46, 139, 87, 0.85), rgba(138, 43, 226, 0.85)),
     url('imagenes/banners/Carrera.webp'); 
-    
   background-size: cover;
   background-position: center;
-  background-attachment: fixed; /* Efecto Parallax */
+  background-attachment: scroll;
+  background-repeat: no-repeat;
 }
 
-/* Estilo para la FECHA (mantiene el color liso original) */
-.fecha-section {
-  padding: 80px 20px;
+.fundamentacion .container {
+  padding: 0 15px;
+}
+
+.fundamentacion h2 {
+  text-align: center;
+  color: var(--blanco) !important;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  position: relative;
+  padding-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.fundamentacion h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: var(--blanco);
+  border-radius: 2px;
+}
+
+.fundamentacion-content {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  width: 100%;
+}
+
+.fundamentacion-content p {
+  margin-bottom: 20px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.destacado {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--violeta-principal);
+  text-align: center;
+  margin-top: 25px;
+  font-size: 1.1rem;
+  padding: 15px;
   background-color: var(--violeta-claro);
+  border-radius: 10px;
+  border-left: 4px solid var(--violeta-principal);
 }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
+/* =========================================
+   7. RECORRIDOS - MAPAS MÁS PEQUEÑOS EN PC
+========================================= */
+
+.recorridos-detallados {
+  padding: 80px 0;
+  background: var(--blanco);
+  width: 100%;
 }
 
-/* Estilos generales de Títulos H2 */
-section h2 {
+.recorridos-detallados h2 {
   text-align: center;
   color: var(--violeta-principal);
-  font-size: 2.2rem;
+  font-size: 2rem;
   margin-bottom: 40px;
   position: relative;
   padding-bottom: 15px;
 }
 
-section h2::after {
+.recorridos-detallados h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -286,79 +340,49 @@ section h2::after {
   border-radius: 2px;
 }
 
-/* Corrección de color SOLO para el título de Fundamentación */
-.fundamentacion h2 {
-  color: var(--blanco) !important; /* Forzamos blanco para contraste */
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.fundamentacion h2::after {
-  background: var(--blanco); /* La rayita blanca también */
-}
-
-/* Caja de contenido de la fundamentación */
-.fundamentacion-content {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 50px;
-  border-radius: 20px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-}
-
-.fecha-card {
-  background: var(--blanco);
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: var(--sombra-suave);
-}
-
-.destacado {
-  font-style: italic;
-  font-weight: 600;
-  color: var(--violeta-principal);
-  text-align: center;
-  margin-top: 20px;
-  font-size: 1.1rem;
-}
-
-/* =========================================
-   7. RECORRIDOS
-========================================= */
-.recorridos-detallados {
-  padding: 80px 20px;
-  background: var(--blanco);
-}
-
 .recorridos-tabs {
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .tab-button {
   background: var(--gris-claro) !important;
   color: var(--gris-medio) !important;
   box-shadow: none !important;
-  border: 2px solid transparent;
+  border: 2px solid transparent !important;
+  padding: 12px 25px !important;
+  border-radius: 50px !important;
+  font-size: 0.9rem !important;
+  transition: var(--transicion);
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .tab-button.active {
   background: var(--violeta-claro) !important;
   color: var(--violeta-principal) !important;
-  border-color: var(--violeta-principal);
+  border-color: var(--violeta-principal) !important;
   font-weight: bold;
 }
 
 .tab-content {
   background: var(--blanco);
   border-radius: 20px;
-  padding: 20px;
+  padding: 30px;
   text-align: center;
+  width: 100%;
+  overflow: hidden;
 }
 
 .tab-pane {
   display: none;
   animation: fadeIn 0.5s ease;
+  width: 100%;
 }
 
 .tab-pane.active {
@@ -370,49 +394,159 @@ section h2::after {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.recorrido-info {
+  width: 100%;
+}
+
+.recorrido-info h3 {
+  color: var(--violeta-principal);
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
+
+/* CONTENEDOR DE MAPA MÁS PEQUEÑO EN PC */
 .recorrido-mapa {
-  max-width: 650px;
+  max-width: 700px;
   margin: 0 auto 30px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .recorrido-mapa img {
   width: 100%;
   height: auto;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  display: block;
   border: 4px solid var(--blanco);
+  max-height: 450px;
+  object-fit: contain;
+}
+
+.btn-descargar {
+  display: inline-block;
+  background: var(--gradiente-principal) !important;
+  color: var(--blanco) !important;
+  padding: 12px 30px !important;
+  border-radius: 50px !important;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+  transition: var(--transicion);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-descargar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
+  filter: brightness(1.1);
 }
 
 /* =========================================
-   8. FECHA
+   8. CALENDARIO - RESPONSIVE
 ========================================= */
+
+.fecha-section {
+  padding: 60px 0;
+  background-color: var(--violeta-claro);
+  display: none;
+}
+
+.fecha-section .container {
+  padding: 0 15px;
+}
+
+.fecha-section h2 {
+  text-align: center;
+  color: var(--violeta-principal);
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
 .fecha-info {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .fecha-card {
+  background: var(--blanco);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: var(--sombra-suave);
   text-align: center;
-  max-width: 600px;
-  border-top: 6px solid var(--verde-muni);
+  max-width: 500px;
+  width: 100%;
 }
 
 .fecha-card h3 {
-  font-size: 2rem;
-  color: var(--verde-muni);
-  margin-bottom: 15px;
+  color: var(--violeta-principal);
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+}
+
+.btn-calendario {
+  display: inline-block;
+  background: var(--gradiente-principal) !important;
+  color: var(--blanco) !important;
+  padding: 15px 40px !important;
+  border-radius: 50px !important;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+  transition: var(--transicion);
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn-calendario:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
+  filter: brightness(1.1);
 }
 
 /* =========================================
-   9. FORMULARIO (MODIFICADO)
+   9. FORMULARIO - RESPONSIVE
 ========================================= */
+
 .form-section {
-  padding: 80px 20px;
-  /* CAMBIO: Usamos el violeta claro para unificar con la fecha */
+  padding: 80px 0;
   background-color: var(--violeta-claro);
+  width: 100%;
 }
 
-form {
+.form-section h2 {
+  text-align: center;
+  color: var(--violeta-principal);
+  font-size: 2rem;
+  margin-bottom: 40px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.form-section h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: var(--gradiente-principal);
+  border-radius: 2px;
+}
+
+#formulario {
   max-width: 800px;
   margin: 0 auto;
   padding: 40px;
@@ -420,29 +554,33 @@ form {
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.15);
   border: 1px solid #e0e0e0;
+  width: 100%;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
 }
 
 .form-group {
   margin-bottom: 20px;
+  width: 100%;
 }
 
-form label {
+.form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 700;
   color: var(--gris-oscuro);
   font-size: 0.9rem;
   text-transform: uppercase;
+  width: 100%;
 }
 
-form input,
-form select {
+.form-group input,
+.form-group select {
   width: 100%;
   padding: 14px;
   border: 2px solid var(--gris-borde);
@@ -453,39 +591,34 @@ form select {
   transition: var(--transicion);
 }
 
-form input:focus,
-form select:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: var(--violeta-principal);
   background-color: #fff;
   box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.15);
 }
 
-form button {
+#submit-btn {
   width: 100%;
   margin-top: 20px;
   font-size: 1.1rem !important;
   padding: 16px !important;
+  border-radius: 50px !important;
 }
 
-/* Estilos para reCAPTCHA */
 .g-recaptcha {
   transform: scale(0.9);
   transform-origin: 0 0;
   margin: 10px 0;
+  overflow: hidden;
 }
 
-.g-recaptcha div {
+.g-recaptcha > div {
   margin: 0 auto;
+  width: 100% !important;
 }
 
-@media (max-width: 768px) {
-  .g-recaptcha {
-    transform: scale(0.85);
-  }
-}
-
-/* Mensaje de error del CAPTCHA */
 #captcha-error {
   color: #f44336;
   font-size: 0.9em;
@@ -503,6 +636,7 @@ form button {
   border-radius: 20px;
   box-shadow: var(--sombra-suave);
   border-top: 6px solid var(--violeta-principal);
+  width: 100%;
 }
 
 #qr {
@@ -512,6 +646,7 @@ form button {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  max-width: 100%;
 }
 
 .info-adicional {
@@ -520,16 +655,62 @@ form button {
   border-radius: 10px;
   margin-top: 20px;
   text-align: left;
+  width: 100%;
 }
 
-.hidden { display: none !important; }
+.hidden { 
+  display: none !important; 
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--violeta-principal);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 /* =========================================
-   10. CONTACTOS
+   10. CONTACTOS - RESPONSIVE
 ========================================= */
+
 .contactos {
-  padding: 80px 20px;
+  padding: 80px 0;
   background: var(--blanco);
+  width: 100%;
+}
+
+.contactos h2 {
+  text-align: center;
+  color: var(--violeta-principal);
+  font-size: 2rem;
+  margin-bottom: 40px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.contactos h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: var(--gradiente-principal);
+  border-radius: 2px;
 }
 
 .contactos-container {
@@ -538,6 +719,7 @@ form button {
   align-items: center; 
   flex-wrap: wrap;
   gap: 30px;
+  width: 100%;
 }
 
 .contacto-card {
@@ -557,44 +739,73 @@ form button {
   box-shadow: var(--sombra-hover);
 }
 
+.contacto-card h3 {
+  color: var(--violeta-principal);
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
+
+.contacto-card p {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .contacto-card p a {
   color: var(--gris-oscuro);
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: color 0.3s ease;
-  word-break: break-word; 
+  word-break: break-word;
+  text-align: center;
 }
 
 .contacto-card p a:hover {
   color: var(--violeta-principal);
+  text-decoration: underline;
 }
 
 .contacto-card p i {
   color: var(--verde-muni);
-  margin-right: 10px;
   font-size: 1.2rem;
-}
-
-.contacto-card h3 {
-  margin-bottom: 20px;
+  min-width: 20px;
 }
 
 /* =========================================
-   11. REDES
+   11. REDES - RESPONSIVE
 ========================================= */
+
 .redes {
-  padding: 60px 20px;
+  padding: 80px 0;
   background: var(--gradiente-principal);
   text-align: center;
   color: #ffffff;
+  width: 100%;
 }
 
 .redes h2 {
   color: #ffffff;
   margin-bottom: 40px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  font-size: 2.5rem;
+  font-size: 2rem;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.redes h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 2px;
 }
 
 .redes-grid-container {
@@ -605,6 +816,7 @@ form button {
   max-width: 1000px;
   margin: 0 auto;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .redes-grupo {
@@ -624,12 +836,13 @@ form button {
   padding-bottom: 10px;
   width: 100%; 
   max-width: 300px;
+  text-align: center;
 }
 
 .redes-separador {
   width: 1px;
   background-color: rgba(255, 255, 255, 0.3);
-  height: 150px; 
+  height: 150px;
   align-self: center;
 }
 
@@ -638,13 +851,14 @@ form button {
   justify-content: center;
   gap: 15px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .red-social {
-  background: rgba(255, 255, 255, 0.15); 
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
   text-decoration: none;
-  padding: 10px 20px;
+  padding: 12px 25px;
   border-radius: 30px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -652,8 +866,12 @@ form button {
   transition: var(--transicion);
   display: flex;
   align-items: center;
-  gap: 8px;
-  backdrop-filter: blur(5px); 
+  gap: 10px;
+  backdrop-filter: blur(5px);
+  flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+  justify-content: center;
 }
 
 .red-social:hover {
@@ -664,34 +882,21 @@ form button {
   border-color: #ffffff;
 }
 
-.red-social i { font-size: 1.1rem; }
-
-@media (max-width: 768px) {
-  .redes-grid-container {
-    flex-direction: column; 
-    align-items: center;
-    gap: 50px;
-  }
-  
-  .redes-separador {
-    width: 80%; 
-    height: 1px;
-  }
-  
-  .redes-grupo h3 {
-    font-size: 1.1rem;
-  }
+.red-social i {
+  font-size: 1.1rem;
 }
 
 /* =========================================
-   12. FOOTER
+   12. FOOTER - RESPONSIVE
 ========================================= */
+
 footer {
   background-color: #1a1a1a;
   color: #e0e0e0;
   text-align: center;
   padding: 40px 20px;
   border-top: 4px solid var(--verde-muni);
+  width: 100%;
 }
 
 .footer-logos {
@@ -705,37 +910,19 @@ footer {
 
 .footer-logos img {
   max-height: 60px;
-  width: auto
+  width: auto;
+  max-width: 100%;
 }
+
 footer p {
   font-size: 0.9rem;
   color: #bbbbbb;
-} 
+  margin-top: 15px;
+}
 
 /* =========================================
-   13. RESPONSIVE
+   13. BOTÓN SCROLL TO TOP
 ========================================= */
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    height: auto;
-    padding: 15px;
-  }
-
-  nav ul {
-    margin-top: 15px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .form-grid { grid-template-columns: 1fr; }
-  
-  .recorridos-tabs { flex-wrap: wrap; }
-  
-  .tab-button { width: 100%; }
-
-  .contacto-card { width: 100%; max-width: none; }
-}
 
 #btn-top {
   position: fixed;
@@ -750,4 +937,429 @@ footer p {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  background: var(--gradiente-principal) !important;
+  color: var(--blanco) !important;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: var(--transicion);
+}
+
+#btn-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+/* =========================================
+   14. MEDIA QUERIES - RESPONSIVE
+========================================= */
+
+/* PC - BANNER COMPLETO SIN CORTES */
+@media (min-width: 1025px) {
+  .hero {
+    padding: 0 !important;
+  }
+  
+  .banner-full {
+    width: 100%;
+    max-width: 1200px;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  /* Mapas más pequeños en PC */
+  .recorrido-mapa {
+    max-width: 700px !important;
+  }
+  
+  .recorrido-mapa img {
+    max-height: 450px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .hero {
+    padding: 0 !important;
+  }
+  
+  .banner-full {
+    max-height: none;
+    height: auto;
+    max-width: 90%;
+  }
+  
+  .pasos {
+    padding: 40px 15px;
+  }
+  
+  .paso {
+    flex: 1 1 180px;
+    max-width: 220px;
+    min-width: 180px;
+  }
+  
+  .fundamentacion-content {
+    padding: 30px;
+  }
+  
+  .form-grid {
+    gap: 15px;
+  }
+  
+  .redes-grid-container {
+    gap: 30px;
+  }
+  
+  /* Mapas más pequeños en tablet */
+  .recorrido-mapa {
+    max-width: 90% !important;
+  }
+  
+  .recorrido-mapa img {
+    max-height: 400px;
+  }
+}
+
+/* MÓVILES - BANNER AJUSTADO */
+@media (max-width: 768px) {
+  /* Header - SIN ESPACIO INFERIOR */
+  header {
+    flex-direction: column;
+    padding: 10px 15px 0 !important; /* Eliminado padding inferior */
+    gap: 10px;
+  }
+  
+  .logo {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .logo img {
+    height: 45px;
+  }
+  
+  nav {
+    width: 100%;
+  }
+  
+  nav ul {
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  nav a {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+  }
+  
+  /* Hero - SIN ESPACIO SUPERIOR */
+  .hero {
+    padding: 0 !important;
+    width: 100%;
+  }
+  
+  .banner-full {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 60vh;
+    object-fit: contain;
+    margin: 0 !important;
+  }
+  
+  .arrow-down {
+    bottom: 15px;
+    font-size: 2rem;
+  }
+  
+  /* Pasos */
+  .pasos {
+    padding: 40px 15px;
+    gap: 15px;
+  }
+  
+  .paso {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 100%;
+    margin: 5px 0;
+  }
+  
+  /* Fundamentación */
+  .fundamentacion {
+    padding: 60px 0;
+  }
+  
+  .fundamentacion h2 {
+    font-size: 1.6rem;
+  }
+  
+  .fundamentacion-content {
+    padding: 25px;
+  }
+  
+  .fundamentacion-content p {
+    font-size: 0.95rem;
+  }
+  
+  /* Recorridos */
+  .recorridos-detallados {
+    padding: 60px 0;
+  }
+  
+  .recorridos-detallados h2 {
+    font-size: 1.6rem;
+  }
+  
+  .recorridos-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .tab-button {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 5px;
+  }
+  
+  .tab-content {
+    padding: 20px;
+  }
+  
+  .recorrido-mapa {
+    max-width: 100% !important;
+  }
+  
+  .recorrido-mapa img {
+    max-height: 300px;
+  }
+  
+  /* Formulario */
+  .form-section {
+    padding: 60px 0;
+  }
+  
+  .form-section h2 {
+    font-size: 1.6rem;
+  }
+  
+  #formulario {
+    padding: 25px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  /* Contactos */
+  .contactos {
+    padding: 60px 0;
+  }
+  
+  .contactos h2 {
+    font-size: 1.6rem;
+  }
+  
+  .contacto-card {
+    padding: 25px;
+  }
+  
+  .contacto-card h3 {
+    font-size: 1.3rem;
+  }
+  
+  /* Redes */
+  .redes {
+    padding: 60px 0;
+  }
+  
+  .redes h2 {
+    font-size: 1.6rem;
+  }
+  
+  .redes-grid-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .redes-separador {
+    width: 80%;
+    height: 1px;
+    max-width: 300px;
+  }
+  
+  .redes-grupo {
+    width: 100%;
+  }
+  
+  .red-social {
+    min-width: 140px;
+  }
+  
+  /* Footer */
+  .footer-logos {
+    gap: 20px;
+  }
+  
+  .footer-logos img {
+    max-height: 50px;
+  }
+  
+  /* Mostrar sección de fecha solo en móviles */
+  .fecha-section {
+    display: block;
+  }
+  
+  /* Ocultar enlace AQUÍ en desktop para evitar confusiones */
+  .paso a[href="#fecha"] {
+    display: inline;
+  }
+}
+
+/* MÓVILES PEQUEÑOS - BANNER AÚN MÁS PEQUEÑO */
+@media (max-width: 480px) {
+  /* Header */
+  nav ul {
+    gap: 4px;
+  }
+  
+  nav a {
+    font-size: 0.7rem;
+    padding: 3px 5px;
+  }
+  
+  /* Hero - SIN ESPACIO */
+  .hero {
+    padding: 0 !important;
+  }
+  
+  .banner-full {
+    width: 100%;
+    max-width: 100%;
+    max-height: 50vh;
+    margin: 0 !important;
+  }
+  
+  .arrow-down {
+    bottom: 10px;
+    font-size: 1.8rem;
+  }
+  
+  /* Títulos generales */
+  section h2 {
+    font-size: 1.4rem;
+  }
+  
+  /* Pasos */
+  .paso {
+    padding: 20px 15px;
+  }
+  
+  .paso h4 {
+    font-size: 1rem;
+  }
+  
+  /* Fundamentación */
+  .fundamentacion-content {
+    padding: 20px 15px;
+  }
+  
+  /* Recorridos */
+  .recorrido-mapa img {
+    max-height: 250px;
+  }
+  
+  /* Formulario */
+  #formulario {
+    padding: 20px 15px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+  
+  /* Contactos */
+  .contacto-card {
+    padding: 20px 15px;
+  }
+  
+  .contacto-card p a {
+    font-size: 0.9rem;
+  }
+  
+  /* Redes */
+  .redes-grupo h3 {
+    font-size: 1.1rem;
+  }
+  
+  .red-social {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+  }
+  
+  /* Footer */
+  footer {
+    padding: 30px 15px;
+  }
+  
+  .footer-logos img {
+    max-height: 40px;
+  }
+  
+  footer p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Desktop (más de 768px) */
+@media (min-width: 769px) {
+  .fecha-section {
+    display: none;
+  }
+  
+  .paso a[href="#fecha"] {
+    display: inline;
+  }
+}
+
+/* Pantallas muy grandes (más de 1400px) */
+@media (min-width: 1400px) {
+  /* Banner mantiene su tamaño proporcional */
+  .banner-full {
+    max-width: 1300px;
+  }
+  
+  /* Mapas aún más pequeños en pantallas grandes */
+  .recorrido-mapa {
+    max-width: 650px !important;
+  }
+  
+  .recorrido-mapa img {
+    max-height: 400px;
+  }
+}
+
+/* Estilos específicos para asegurar que SVG se muestre completo pero ajustado */
+.banner-full[src*="fondotipografico.svg"] {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Forzar que el contenedor hero no recorte nada */
+.hero {
+  overflow: visible !important;
+}
+
+/* Asegurar que no haya espacio entre header y hero */
+header + .hero {
+  margin-top: 0 !important;
 }

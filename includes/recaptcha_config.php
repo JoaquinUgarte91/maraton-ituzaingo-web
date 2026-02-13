@@ -7,5 +7,5 @@
 // 2. Reemplaza las claves con las tuyas de:
 //    https://www.google.com/recaptcha/admin
 
-    define('RECAPTCHA_SITE_KEY', 'Key de sitio de ejemplo aquí');
-    define('RECAPTCHA_SECRET_KEY', 'Key secreta de ejemplo aquí');
+    define('RECAPTCHA_SITE_KEY', '6Lf7BGQsAAAAAOtj39R8AIJJicxFG15x-eE-yWls');
+    define('RECAPTCHA_SECRET_KEY', '6Lf7BGQsAAAAAAys1vp7fUa4PEt-Zrwqu1vHFkPO');

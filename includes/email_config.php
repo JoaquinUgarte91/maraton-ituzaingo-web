@@ -12,10 +12,10 @@
 // ========================================
 // DATOS SMTP DEL MUNICIPIO (ejemplo)
 // ========================================
-define('EMAIL_HOST', 'mail.miituzaingo.gob.ar');  // Servidor SMTP (ej: mail.miituzaingo.gob.ar)
+define('EMAIL_HOST', 'smtp.gmail.com');  // Servidor SMTP (ej: mail.miituzaingo.gob.ar)
 define('EMAIL_PORT', 587);                         // Puerto SMTP (587 para STARTTLS, 465 para SSL)
-define('EMAIL_USERNAME', 'mujeres_mimaraton@miituzaingo.gob.ar');  // Email del municipio
-define('EMAIL_PASSWORD', 'TU_CONTRASEÑA_AQUI');    // ⚠️ ¡Reemplaza con la contraseña real!
-define('EMAIL_FROM', 'mujeres_mimaraton@miituzaingo.gob.ar');      // Email remitente
+define('EMAIL_USERNAME', 'gugarte305@gmail.com');  // Email del municipio
+define('EMAIL_PASSWORD', 'scnv zeka jxxt kqro');    // ⚠️ ¡Reemplaza con la contraseña real!
+define('EMAIL_FROM', 'gugarte305@gmail.com');      // Email remitente
 define('EMAIL_FROM_NAME', 'Maratón Ituzaingó 2026');  // Nombre que aparece como remitente
-define('EMAIL_REPLY_TO', 'Consejomujeresdeituzaingo@hotmail.com'); // Email para respuestas
+define('EMAIL_REPLY_TO', 'gugarte305@gmail.com'); // Email para respuestas

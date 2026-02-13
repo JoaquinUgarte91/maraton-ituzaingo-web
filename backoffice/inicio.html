@@ -20,11 +20,7 @@
       <a href="#" class="nav-item" id="menu-maratones"><i class="fas fa-image"></i> Maratones</a>
       <a href="#" class="nav-item" id="menu-admins"><i class="fas fa-user-shield"></i> Administrar usuarios</a>
       <a href="#" class="nav-item" id="menu-scan-qr"><i class="fas fa-qrcode"></i> Escanear QR</a>
-      <a href="#" class="nav-item"><i class="fas fa-exclamation-circle"></i> Error Page</a>
-      <a href="#" class="nav-item"><i class="fas fa-table"></i> Tables</a>
-      <a href="#" class="nav-item"><i class="fas fa-map"></i> Maps</a>
-      <a href="#" class="nav-item"><i class="fas fa-file-alt"></i> Pages</a>
-      <a href="#" class="nav-item"><i class="fas fa-pen"></i> Forms</a>
+     
 
       <!-- LOGOUT -->
       <a href="#" class="nav-item" id="btn-logout">
@@ -110,8 +106,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   // ======================================================
 
   const LISTAR_URL = '/api/listar_inscripciones.php';
-  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '' };
-
+  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '', page: 1, pageSize: 20 };
 
   async function cargarInscripciones({ q = '', page = 1, pageSize = 20 } = {}) {
     const main = document.getElementById('main-content');
@@ -128,6 +123,18 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
                                                    : { success:false, message: await res.text() };
 
       if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo obtener inscripciones');
+      
+      // Guardar estado
+    filtroActual.page = page;
+    filtroActual.pageSize = pageSize;
+
+    // Calcular páginas
+    const total = Number(data.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    const hasPrev = currentPage > 1;
+    const hasNext = currentPage < totalPages;
+
 
       // ✅ ACÁ (PUNTO 1): permisos según rol
       const role = window.__ME__?.role;
@@ -194,6 +201,31 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
             ${filas || `<tr><td colspan="6" style="text-align:center; padding:20px;">Sin datos</td></tr>`}
           </tbody>
         </table>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
+  <div style="opacity:.75">
+    Página <strong>${currentPage}</strong> de <strong>${totalPages}</strong> — Total: ${total}
+  </div>
+
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <button id="btnPrev" class="btn-mini" ${hasPrev ? '' : 'disabled'}>Anterior</button>
+
+    <select id="pageSelect" class="btn-mini" style="padding:8px 10px;">
+      ${Array.from({length: totalPages}).map((_,i)=>`
+        <option value="${i+1}" ${i+1===currentPage?'selected':''}>${i+1}</option>
+      `).join('')}
+    </select>
+
+    <button id="btnNext" class="btn-mini" ${hasNext ? '' : 'disabled'}>Siguiente</button>
+
+    <select id="pageSizeSelect" class="btn-mini" style="padding:8px 10px;">
+      ${[10,20,50,100].map(s=>`
+        <option value="${s}" ${s===pageSize?'selected':''}>${s} por página</option>
+      `).join('')}
+    </select>
+  </div>
+</div>
+
       `;
 
       document.getElementById('buscar').addEventListener('change', e =>
@@ -220,6 +252,25 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
         if (!btn) return;
         onAccionUsuario(btn.dataset.action, Number(btn.dataset.id));
       });
+      
+      document.getElementById('btnPrev')?.addEventListener('click', () => {
+        if (currentPage > 1) cargarInscripciones({ q: filtroActual.q, page: currentPage - 1, pageSize });
+        });
+
+    document.getElementById('btnNext')?.addEventListener('click', () => {
+        if (currentPage < totalPages) cargarInscripciones({ q: filtroActual.q, page: currentPage + 1, pageSize });
+        });
+
+    document.getElementById('pageSelect')?.addEventListener('change', (e) => {
+        const p = Number(e.target.value || 1);
+        cargarInscripciones({ q: filtroActual.q, page: p, pageSize });
+        });
+
+    document.getElementById('pageSizeSelect')?.addEventListener('change', (e) => {
+        const newSize = Number(e.target.value || 20);
+        cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: newSize });
+        });
+
 
     } catch (err) {
       main.innerHTML = `<h2>Usuarios Registrados</h2><p style="color:#b00020">Error: ${esc(err.message)}</p>`;
@@ -560,6 +611,15 @@ async function toggleKitRetiro(id, value) {
             <tr><th>Fecha inscripción</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
             <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
             <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
+            <tr>
+  <th>Remera</th>
+  <td>${
+    (u.remera_asignada == 1 || u.remera_asignada === true)
+      ? ((u.remera_retirada == 1 || u.remera_retirada === true) ? '🎽 ✅ Retirada' : '🎽 ❌ Pendiente')
+      : '🚫 No recibe remera'
+  }</td>
+</tr>
+
           </tbody>
         </table>
       </div>
