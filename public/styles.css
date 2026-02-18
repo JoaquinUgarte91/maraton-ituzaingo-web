@@ -72,14 +72,14 @@ section {
 }
 
 /* =========================================
-   3. HEADER Y NAV - SIN ESPACIO INFERIOR
+   3. HEADER Y NAV (BASE / PC)
 ========================================= */
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 5% 0 !important; /* Eliminado padding inferior */
+  padding: 8px 5% 0 !important;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 20px rgba(0,0,0,0.08);
@@ -97,9 +97,14 @@ header {
 }
 
 .logo img {
-  height: 55px;
+  height: 65px;       
   width: auto;
-  max-height: 55px;
+  max-height: 65px;   
+}
+
+/* El botón hamburguesa está oculto por defecto en PC */
+.hamburger {
+  display: none;
 }
 
 nav {
@@ -140,7 +145,7 @@ nav a:hover {
 }
 
 /* =========================================
-   4. HERO SECTION - SIN ESPACIO SUPERIOR
+   4. HERO SECTION (BANNER PC)
 ========================================= */
 
 .hero {
@@ -150,23 +155,27 @@ nav a:hover {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0 !important; /* Eliminado todo el padding */
+  padding: 0 !important;
   margin: 0 !important;
   background-color: var(--blanco);
-  min-height: auto;
-  overflow: visible;
+  height: auto !important; 
+  min-height: auto !important;
+  overflow: visible !important;
   margin-top: 0 !important;
 }
 
 .banner-full {
-  width: 100%;
-  height: auto;
-  max-width: 100%;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important; /* Full width en PC */
   display: block;
-  object-fit: contain;
+  object-fit: contain !important;
   object-position: center;
   margin: 0 !important;
   padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  min-width: 0 !important;
 }
 
 .arrow-down {
@@ -181,6 +190,7 @@ nav a:hover {
   cursor: pointer;
   text-shadow: 0 2px 5px rgba(0,0,0,0.3);
   margin-top: 0;
+  display: block;
 }
 
 @keyframes bounce {
@@ -190,7 +200,7 @@ nav a:hover {
 }
 
 /* =========================================
-   5. SECCIÓN PASOS - RESPONSIVE
+   5. SECCIÓN PASOS
 ========================================= */
 
 .pasos {
@@ -241,7 +251,7 @@ nav a:hover {
 }
 
 /* =========================================
-   6. FUNDAMENTACIÓN - RESPONSIVE
+   6. FUNDAMENTACIÓN
 ========================================= */
 
 .fundamentacion {
@@ -310,7 +320,7 @@ nav a:hover {
 }
 
 /* =========================================
-   7. RECORRIDOS - MAPAS MÁS PEQUEÑOS EN PC
+   7. RECORRIDOS
 ========================================= */
 
 .recorridos-detallados {
@@ -371,12 +381,13 @@ nav a:hover {
 }
 
 .tab-content {
-  background: var(--blanco);
-  border-radius: 20px;
-  padding: 30px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
   text-align: center;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tab-pane {
@@ -404,22 +415,27 @@ nav a:hover {
   font-size: 1.5rem;
 }
 
-/* CONTENEDOR DE MAPA MÁS PEQUEÑO EN PC */
+/* MAPA ESTÁNDAR */
 .recorrido-mapa {
-  max-width: 700px;
+  width: 100%;
+  max-width: 1000px; 
   margin: 0 auto 30px;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: visible;
 }
 
 .recorrido-mapa img {
   width: 100%;
   height: auto;
+  max-height: 80vh; 
   display: block;
-  border: 4px solid var(--blanco);
-  max-height: 450px;
+  border: none !important;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
   object-fit: contain;
+  margin: 0 auto;
 }
 
 .btn-descargar {
@@ -447,7 +463,7 @@ nav a:hover {
 }
 
 /* =========================================
-   8. CALENDARIO - RESPONSIVE
+   8. CALENDARIO
 ========================================= */
 
 .fecha-section {
@@ -516,7 +532,7 @@ nav a:hover {
 }
 
 /* =========================================
-   9. FORMULARIO - RESPONSIVE
+   9. FORMULARIO
 ========================================= */
 
 .form-section {
@@ -683,7 +699,7 @@ nav a:hover {
 }
 
 /* =========================================
-   10. CONTACTOS - RESPONSIVE
+   10. CONTACTOS
 ========================================= */
 
 .contactos {
@@ -776,7 +792,7 @@ nav a:hover {
 }
 
 /* =========================================
-   11. REDES - RESPONSIVE
+   11. REDES
 ========================================= */
 
 .redes {
@@ -887,7 +903,7 @@ nav a:hover {
 }
 
 /* =========================================
-   12. FOOTER - RESPONSIVE
+   12. FOOTER
 ========================================= */
 
 footer {
@@ -951,33 +967,10 @@ footer p {
 }
 
 /* =========================================
-   14. MEDIA QUERIES - RESPONSIVE
+   14. MEDIA QUERIES (RESPONSIVE)
 ========================================= */
 
-/* PC - BANNER COMPLETO SIN CORTES */
-@media (min-width: 1025px) {
-  .hero {
-    padding: 0 !important;
-  }
-  
-  .banner-full {
-    width: 100%;
-    max-width: 1200px;
-    height: auto;
-    object-fit: contain;
-  }
-  
-  /* Mapas más pequeños en PC */
-  .recorrido-mapa {
-    max-width: 700px !important;
-  }
-  
-  .recorrido-mapa img {
-    max-height: 450px;
-  }
-}
-
-/* Tablet */
+/* --- TABLET (769px - 1024px) --- */
 @media (max-width: 1024px) {
   .hero {
     padding: 0 !important;
@@ -985,381 +978,238 @@ footer p {
   
   .banner-full {
     max-height: none;
-    height: auto;
     max-width: 90%;
   }
   
-  .pasos {
-    padding: 40px 15px;
-  }
-  
-  .paso {
-    flex: 1 1 180px;
-    max-width: 220px;
-    min-width: 180px;
-  }
-  
-  .fundamentacion-content {
-    padding: 30px;
-  }
-  
-  .form-grid {
-    gap: 15px;
-  }
-  
-  .redes-grid-container {
-    gap: 30px;
-  }
-  
-  /* Mapas más pequeños en tablet */
-  .recorrido-mapa {
-    max-width: 90% !important;
-  }
-  
-  .recorrido-mapa img {
-    max-height: 400px;
-  }
+  .pasos { padding: 40px 15px; }
+  .paso { flex: 1 1 180px; max-width: 220px; min-width: 180px; }
+  .fundamentacion-content { padding: 30px; }
+  .form-grid { gap: 15px; }
+  .redes-grid-container { gap: 30px; }
 }
 
-/* MÓVILES - BANNER AJUSTADO */
+/* --- MÓVILES (<= 768px) --- */
 @media (max-width: 768px) {
-  /* Header - SIN ESPACIO INFERIOR */
+  
+  /* 1. Header estilo APP con Hamburguesa */
   header {
-    flex-direction: column;
-    padding: 10px 15px 0 !important; /* Eliminado padding inferior */
-    gap: 10px;
+    flex-direction: row !important; /* Alineación horizontal */
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 20px !important;
+    position: relative; /* Para el menú absoluto */
   }
   
   .logo {
-    width: 100%;
-    text-align: center;
+    width: auto;
+    margin: 0;
+    text-align: left;
   }
   
   .logo img {
-    height: 45px;
+    height: 50px;
   }
-  
-  nav {
-    width: 100%;
-  }
-  
-  nav ul {
-    justify-content: center;
-    gap: 6px;
-  }
-  
-  nav a {
-    font-size: 0.75rem;
-    padding: 4px 6px;
-  }
-  
-  /* Hero - SIN ESPACIO SUPERIOR */
-  .hero {
-    padding: 0 !important;
-    width: 100%;
-  }
-  
-  .banner-full {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: 60vh;
-    object-fit: contain;
-    margin: 0 !important;
-  }
-  
-  .arrow-down {
-    bottom: 15px;
-    font-size: 2rem;
-  }
-  
-  /* Pasos */
-  .pasos {
-    padding: 40px 15px;
-    gap: 15px;
-  }
-  
-  .paso {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 100%;
-    margin: 5px 0;
-  }
-  
-  /* Fundamentación */
-  .fundamentacion {
-    padding: 60px 0;
-  }
-  
-  .fundamentacion h2 {
-    font-size: 1.6rem;
-  }
-  
-  .fundamentacion-content {
-    padding: 25px;
-  }
-  
-  .fundamentacion-content p {
-    font-size: 0.95rem;
-  }
-  
-  /* Recorridos */
-  .recorridos-detallados {
-    padding: 60px 0;
-  }
-  
-  .recorridos-detallados h2 {
-    font-size: 1.6rem;
-  }
-  
-  .recorridos-tabs {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .tab-button {
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 5px;
-  }
-  
-  .tab-content {
-    padding: 20px;
-  }
-  
-  .recorrido-mapa {
-    max-width: 100% !important;
-  }
-  
-  .recorrido-mapa img {
-    max-height: 300px;
-  }
-  
-  /* Formulario */
-  .form-section {
-    padding: 60px 0;
-  }
-  
-  .form-section h2 {
-    font-size: 1.6rem;
-  }
-  
-  #formulario {
-    padding: 25px;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  /* Contactos */
-  .contactos {
-    padding: 60px 0;
-  }
-  
-  .contactos h2 {
-    font-size: 1.6rem;
-  }
-  
-  .contacto-card {
-    padding: 25px;
-  }
-  
-  .contacto-card h3 {
-    font-size: 1.3rem;
-  }
-  
-  /* Redes */
-  .redes {
-    padding: 60px 0;
-  }
-  
-  .redes h2 {
-    font-size: 1.6rem;
-  }
-  
-  .redes-grid-container {
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
-  }
-  
-  .redes-separador {
-    width: 80%;
-    height: 1px;
-    max-width: 300px;
-  }
-  
-  .redes-grupo {
-    width: 100%;
-  }
-  
-  .red-social {
-    min-width: 140px;
-  }
-  
-  /* Footer */
-  .footer-logos {
-    gap: 20px;
-  }
-  
-  .footer-logos img {
-    max-height: 50px;
-  }
-  
-  /* Mostrar sección de fecha solo en móviles */
-  .fecha-section {
-    display: block;
-  }
-  
-  /* Ocultar enlace AQUÍ en desktop para evitar confusiones */
-  .paso a[href="#fecha"] {
-    display: inline;
-  }
-}
 
-/* MÓVILES PEQUEÑOS - BANNER AÚN MÁS PEQUEÑO */
-@media (max-width: 480px) {
-  /* Header */
-  nav ul {
-    gap: 4px;
-  }
-  
-  nav a {
-    font-size: 0.7rem;
-    padding: 3px 5px;
-  }
-  
-  /* Hero - SIN ESPACIO */
-  .hero {
-    padding: 0 !important;
-  }
-  
-  .banner-full {
-    width: 100%;
-    max-width: 100%;
-    max-height: 50vh;
-    margin: 0 !important;
-  }
-  
-  .arrow-down {
-    bottom: 10px;
+  /* Botón Hamburguesa: Visible solo aquí */
+  .hamburger {
+    display: block !important;
+    background: none;
+    border: none;
     font-size: 1.8rem;
+    color: var(--violeta-principal);
+    cursor: pointer;
+    padding: 5px;
   }
-  
-  /* Títulos generales */
-  section h2 {
-    font-size: 1.4rem;
-  }
-  
-  /* Pasos */
-  .paso {
-    padding: 20px 15px;
-  }
-  
-  .paso h4 {
-    font-size: 1rem;
-  }
-  
-  /* Fundamentación */
-  .fundamentacion-content {
-    padding: 20px 15px;
-  }
-  
-  /* Recorridos */
-  .recorrido-mapa img {
-    max-height: 250px;
-  }
-  
-  /* Formulario */
-  #formulario {
-    padding: 20px 15px;
-  }
-  
-  .form-group input,
-  .form-group select {
-    padding: 12px;
-    font-size: 0.95rem;
-  }
-  
-  /* Contactos */
-  .contacto-card {
-    padding: 20px 15px;
-  }
-  
-  .contacto-card p a {
-    font-size: 0.9rem;
-  }
-  
-  /* Redes */
-  .redes-grupo h3 {
-    font-size: 1.1rem;
-  }
-  
-  .red-social {
-    padding: 10px 15px;
-    font-size: 0.85rem;
-  }
-  
-  /* Footer */
-  footer {
-    padding: 30px 15px;
-  }
-  
-  .footer-logos img {
-    max-height: 40px;
-  }
-  
-  footer p {
-    font-size: 0.8rem;
-  }
-}
 
-/* Desktop (más de 768px) */
-@media (min-width: 769px) {
-  .fecha-section {
+  /* Menú desplegable oculto */
+  nav {
     display: none;
+    width: 100%;
+    position: absolute;
+    top: 100%; /* Debajo del header */
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    z-index: 9999;
+    padding-bottom: 20px;
+    border-top: 2px solid var(--violeta-principal);
+  }
+
+  /* Estado activo (visible) */
+  nav.active {
+    display: block !important;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Lista vertical */
+  nav ul {
+    flex-direction: column !important;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  nav a {
+    font-size: 1rem;
+    padding: 15px 0;
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  /* Animación */
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
-  .paso a[href="#fecha"] {
-    display: inline;
+  /* ------------------------------------------- */
+  
+  /* === BANNER MÓVIL: EQUILIBRIO ENTRE ALTURA Y VISIBILIDAD === */
+  .hero {
+    padding: 0 !important;
+    width: 100%;
+    /* Altura fija de 160px: Se ve más alto que "finito", pero no gigante */
+    height: 160px !important; 
+    overflow: hidden !important; 
+    position: relative !important;
+    display: block !important;
   }
-}
-
-/* Pantallas muy grandes (más de 1400px) */
-@media (min-width: 1400px) {
-  /* Banner mantiene su tamaño proporcional */
+  
   .banner-full {
-    max-width: 1300px;
+    width: 100% !important;
+    height: 100% !important; /* Llena los 160px de alto */
+    
+    /* Cover: Llena todo el espacio. Recortará un poco los lados pero se ve "grande". */
+    object-fit: cover !important; 
+    object-position: center !important;
+    
+    /* Posicionamiento para asegurar llenado */
+    position: absolute !important;
+    top: 0; left: 0;
+    margin: 0 !important;
+    min-width: 0 !important;
   }
   
-  /* Mapas aún más pequeños en pantallas grandes */
-  .recorrido-mapa {
-    max-width: 650px !important;
+  /* Ocultar flecha */
+  .arrow-down {
+    display: none !important;
   }
   
-  .recorrido-mapa img {
-    max-height: 400px;
+  /* Resto de estilos móviles */
+  .pasos { padding: 40px 15px; gap: 15px; }
+  .paso { flex: 1 1 100%; max-width: 100%; margin: 5px 0; }
+  
+  .fundamentacion { padding: 60px 0; }
+  .fundamentacion h2 { font-size: 1.6rem; }
+  .fundamentacion-content { padding: 25px; }
+  .fundamentacion-content p { font-size: 0.95rem; }
+  
+  .recorridos-detallados { padding: 60px 0; }
+  .recorridos-detallados h2 { font-size: 1.6rem; }
+  .recorridos-tabs { flex-direction: column; align-items: center; }
+  .tab-button { width: 100%; max-width: 300px; margin-bottom: 5px; }
+  .tab-content { padding: 20px; }
+  
+  .recorrido-mapa { max-width: 100% !important; }
+  
+  .form-section { padding: 60px 0; }
+  .form-section h2 { font-size: 1.6rem; }
+  #formulario { padding: 25px; }
+  .form-grid { grid-template-columns: 1fr; gap: 15px; }
+  
+  .contactos { padding: 60px 0; }
+  .contactos h2 { font-size: 1.6rem; }
+  .contacto-card { padding: 25px; }
+  .contacto-card h3 { font-size: 1.3rem; }
+  
+  .redes { padding: 60px 0; }
+  .redes h2 { font-size: 1.6rem; }
+  .redes-grid-container { flex-direction: column; align-items: center; gap: 30px; }
+  .redes-separador { width: 80%; height: 1px; max-width: 300px; }
+  .redes-grupo { width: 100%; }
+  .red-social { min-width: 140px; }
+  
+  .footer-logos { gap: 20px; }
+  .footer-logos img { max-height: 50px; }
+  
+  .fecha-section { display: block; }
+  .paso a[href="#fecha"] { display: inline; }
+  
+  #download-btn { width: 100%; max-width: 280px; padding: 14px 20px; }
+}
+
+/* --- MÓVILES PEQUEÑOS (<= 480px) --- */
+@media (max-width: 480px) {
+  /* La lógica del header ya está cubierta arriba */
+  
+  .hero { padding: 0 !important; }
+  
+  /* Hereda la lógica del móvil */
+  .banner-full {
+    height: 100% !important;
+    object-fit: cover !important;
   }
+  
+  section h2 { font-size: 1.4rem; }
+  
+  .paso { padding: 20px 15px; }
+  .paso h4 { font-size: 1rem; }
+  
+  .fundamentacion-content { padding: 20px 15px; }
+  
+  #formulario { padding: 20px 15px; }
+  .form-group input, .form-group select { padding: 12px; font-size: 0.95rem; }
+  
+  .contacto-card { padding: 20px 15px; }
+  .contacto-card p a { font-size: 0.9rem; }
+  
+  .redes-grupo h3 { font-size: 1.1rem; }
+  .red-social { padding: 10px 15px; font-size: 0.85rem; }
+  
+  footer { padding: 30px 15px; }
+  .footer-logos img { max-height: 40px; }
+  footer p { font-size: 0.8rem; }
 }
 
-/* Estilos específicos para asegurar que SVG se muestre completo pero ajustado */
-.banner-full[src*="fondotipografico.svg"] {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
-  margin: 0 !important;
-  padding: 0 !important;
+/* --- DESKTOP (>= 769px) - Ocultar cosas de móvil --- */
+@media (min-width: 769px) {
+  .fecha-section { display: none; }
+  .paso a[href="#fecha"] { display: inline; }
 }
 
-/* Forzar que el contenedor hero no recorte nada */
-.hero {
-  overflow: visible !important;
+/* =========================================
+   ESTILOS BOTÓN DESCARGAR QR
+========================================= */
+
+#download-btn {
+  display: inline-block;
+  background: var(--gradiente-principal);
+  color: var(--blanco);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  width: auto;
+  min-width: 200px;
 }
 
-/* Asegurar que no haya espacio entre header y hero */
-header + .hero {
-  margin-top: 0 !important;
+#download-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
+  filter: brightness(1.1);
+}
+
+#download-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
 }

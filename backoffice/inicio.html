@@ -106,7 +106,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   // ======================================================
 
   const LISTAR_URL = '/api/listar_inscripciones.php';
-  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '', page: 1, pageSize: 20 };
+  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '', carrera: '', page: 1, pageSize: 20 };
 
   async function cargarInscripciones({ q = '', page = 1, pageSize = 20 } = {}) {
     const main = document.getElementById('main-content');
@@ -116,7 +116,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
     main.innerHTML = `<h2>Usuarios Registrados</h2><p>Cargando...</p>`;
 
     try {
-      const url = `${LISTAR_URL}?limit=${pageSize}&offset=${offset}&q=${encodeURIComponent(q)}&kit=${encodeURIComponent(filtroActual.kit || '')}&sort=${filtroActual.sort}&order=${filtroActual.order}`;
+      const url = `${LISTAR_URL}?limit=${pageSize}&offset=${offset}&q=${encodeURIComponent(q)}&kit=${encodeURIComponent(filtroActual.kit || '')}&carrera=${encodeURIComponent(filtroActual.carrera || '')}&sort=${filtroActual.sort}&order=${filtroActual.order}`;
       const res = await fetch(url, { credentials: 'include' });
       const ct = res.headers.get('content-type') || '';
       const data = ct.includes('application/json') ? await res.json()
@@ -169,7 +169,14 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
             <option value="pendiente" ${filtroActual.kit==='pendiente'?'selected':''}>Kit pendiente</option>
             <option value="retirado" ${filtroActual.kit==='retirado'?'selected':''}>Kit retirado</option>
           </select>
-
+          
+          <select id="filtroCarrera"
+            style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <option value="" ${filtroActual.carrera===''?'selected':''}>Todas las carreras</option>
+            <option value="10km" ${filtroActual.carrera==='10km'?'selected':''}>10km</option>
+            <option value="3km"  ${filtroActual.carrera==='3km'?'selected':''}>3km</option>
+            <option value="Kids" ${filtroActual.carrera==='Kids'?'selected':''}>Kids</option>
+          </select>
 
           <button id="exportarCsv" type="button"
                   style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
@@ -180,6 +187,8 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
               style="padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer">
               Nuevo
             </button>
+            
+            
 ` : ``}
 
 
@@ -223,6 +232,8 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
         <option value="${s}" ${s===pageSize?'selected':''}>${s} por página</option>
       `).join('')}
     </select>
+    
+    
   </div>
 </div>
 
@@ -244,6 +255,14 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
         filtroActual.kit = e.target.value; // '' | 'pendiente' | 'retirado'
         cargarInscripciones({ q: filtroActual.q, page: 1, pageSize });
       });
+      
+      document.getElementById('filtroCarrera')?.addEventListener('change', (e) => {
+        filtroActual.carrera = e.target.value; // '' | '10km' | '3km' | 'Kids'
+        cargarInscripciones({ q: filtroActual.q, page: 1, pageSize });
+      });
+
+      
+      
 
 
       // ✅ (AGREGADO MÍNIMO) Delegación de eventos para botones CRUD
@@ -284,7 +303,13 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
       let page = 1, items = [], total = 0;
 
       do {
-        const url = `${LISTAR_URL}?limit=${pageSize}&offset=${(page-1)*pageSize}&q=${encodeURIComponent(q)}&kit=${encodeURIComponent(filtroActual.kit || '')}&sort=${filtroActual.sort}&order=${filtroActual.order}`;
+        const url = `${LISTAR_URL}?limit=${pageSize}&offset=${(page-1)*pageSize}` +
+            `&q=${encodeURIComponent(q)}` +
+            `&kit=${encodeURIComponent(filtroActual.kit || '')}` +
+            `&carrera=${encodeURIComponent(filtroActual.carrera || '')}` +
+            `&sort=${encodeURIComponent(filtroActual.sort)}` +
+            `&order=${encodeURIComponent(filtroActual.order)}`;
+
         const res = await fetch(url, { credentials: 'include' });
         const ct = res.headers.get('content-type') || '';
         const data = ct.includes('application/json') ? await res.json()
@@ -612,6 +637,18 @@ async function toggleKitRetiro(id, value) {
             <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
             <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
             <tr>
+  <th>Número de corredor</th>
+  <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+    <input id="ver_numero" type="number" min="1" max="10000" step="1" inputmode="numeric"
+           value="${u.numero_corredor ?? ''}"
+           style="width:180px;padding:8px;border:1px solid #ddd;border-radius:8px" />
+
+    <button id="btnGuardarNumero" class="btn-mini">Guardar</button>
+
+    <span id="numeroMsg" style="opacity:.8"></span>
+  </td>
+</tr>
+
   <th>Remera</th>
   <td>${
     (u.remera_asignada == 1 || u.remera_asignada === true)
@@ -651,6 +688,55 @@ async function toggleKitRetiro(id, value) {
   document.getElementById('btnEliminarDesdeVer')?.addEventListener('click', () => {
     eliminarInscripcion(u.id);
   });
+  
+  document.getElementById('btnGuardarNumero')?.addEventListener('click', async () => {
+  const msg = document.getElementById('numeroMsg');
+  msg.textContent = '';
+  msg.style.color = '';
+
+  const input = document.getElementById('ver_numero');
+  const raw = (input?.value ?? '').trim();
+
+  // vacío => NULL (limpiar número)
+  const numero_corredor = raw === '' ? null : Number(raw);
+
+  // validación cliente
+  if (numero_corredor !== null && (!Number.isInteger(numero_corredor) || numero_corredor < 1 || numero_corredor > 10000)) {
+    msg.style.color = '#b00020';
+    msg.textContent = 'Número inválido (1 a 10000)';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/inscripcion_set_numero.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ id: u.id, numero_corredor })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data.success) {
+      msg.style.color = '#b00020';
+      msg.textContent = data.message || 'No se pudo guardar';
+      return;
+    }
+
+    msg.style.color = '#0a7a2f';
+    msg.textContent = 'Guardado ✅';
+
+    // refrescar ficha para ver el valor persistido
+    const get = await fetch(`/api/inscripcion_get.php?id=${u.id}`, { credentials:'include' });
+    const getData = await get.json().catch(()=> ({}));
+    if (get.ok && getData.success) renderDetalleInscripcion(getData.item);
+
+  } catch (e) {
+    msg.style.color = '#b00020';
+    msg.textContent = 'Error de conexión';
+  }
+});
+
 
   // ✅ Esto SÍ debe estar permitido para visualizador/external
   if (canToggleKit) {
@@ -936,17 +1022,26 @@ async function guardarEdicionInscripcion(id) {
       return;
     }
 
-    if (okEl) okEl.textContent = 'Guardado ✅';
+    // 1) Mostrar OK (y que no se borre)
+if (okEl) {
+  okEl.style.transition = '';
+  okEl.style.opacity = '1';
+  okEl.textContent = 'Guardado correctamente ✅';
+}
 
-    // traer de nuevo y mostrar "Ver"
-    const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
-    const getData = await get.json().catch(() => ({}));
-    if (get.ok && getData.success) {
-      renderDetalleInscripcion(getData.item);
-    } else {
-      // si no, al menos refrescamos el listado
-      cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
-    }
+// 2) Traer data actualizada
+const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+const getData = await get.json().catch(() => ({}));
+
+// 3) Esperar 2s y recién ahí cambiar de pantalla (Ver/Listado)
+setTimeout(() => {
+  if (get.ok && getData.success) {
+    renderDetalleInscripcion(getData.item);
+  } else {
+    cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
+  }
+}, 2000);
+
 
   } catch (e) {
     console.error(e);
@@ -1637,8 +1732,8 @@ async function initQrScanner(){
   resultEl.innerHTML = '';
 
   try {
-    // 1) Decodificar token -> traer inscripción
-    const res = await fetch('/api/qr_decode.php', {
+    // ✅ NUEVO: un solo endpoint que maneja 1er/2do escaneo
+    const res = await fetch('/api/qr_scan.php', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       credentials: 'include',
@@ -1646,59 +1741,71 @@ async function initQrScanner(){
     });
 
     const data = await res.json().catch(()=> ({}));
-    if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo leer el QR');
+    if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo procesar el QR');
 
-    const item = data.item;
-    const id = Number(item?.id || 0);
-    if (!id) throw new Error('Inscripción inválida');
+    // 1) Primer escaneo: SOLO info (remera sí/no)
+    if (data.step === 'INFO') {
+      statusEl.textContent = 'Primer escaneo ✅';
 
-    // 2) Validar kit (setear retirado=1)
-    // Si ya lo tenés retirado, podés frenar acá o permitir "desmarcar".
-    const yaRetiro = (item.kit_retirado == 1 || item.kit_retirado === true);
-    if (yaRetiro) {
       resultEl.innerHTML = `
-        <p style="color:#0a7a2f;margin:0"><strong>OK</strong> Este QR ya estaba validado ✅</p>
+        <p style="margin:0; font-weight:700">${esc(data.message)}</p>
+        <p style="margin:8px 0 0 0; opacity:.8">Escaneá nuevamente para validar retiro de kit (y remera si corresponde).</p>
         <div style="margin-top:12px">
           <button id="btnScanAgain" class="btn-mini">Escanear otro</button>
           <button id="btnVerFicha" class="btn-mini">Ver ficha</button>
         </div>
       `;
+
       document.getElementById('btnScanAgain')?.addEventListener('click', () => {
         statusEl.textContent = 'Listo para escanear.';
         btnStart.disabled = false;
         btnStop.disabled = true;
       });
+
       document.getElementById('btnVerFicha')?.addEventListener('click', () => {
-        renderDetalleInscripcion(item);
+        // data.item viene del backend
+        renderDetalleInscripcion(data.item);
       });
+
       return;
     }
 
-    const upd = await fetch('/api/kit_toggle.php', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ id, value: 1 })
-    });
-
-    const updData = await upd.json().catch(()=> ({}));
-    if (!upd.ok || !updData.success) {
-      throw new Error(updData.message || 'No se pudo validar el kit');
+    // 2) Segundo escaneo: VALIDÓ retiro (kit + remera si corresponde)
+    if (data.step === 'VALIDADO') {
+      statusEl.textContent = 'Retiro validado ✅';
+      // renderiza el detalle actualizado
+      renderDetalleInscripcion(data.item);
+      return;
     }
 
-    // 3) Traer de nuevo la ficha actualizada (opcional pero recomendable)
-    const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
-    const getData = await get.json().catch(()=> ({}));
-    const updated = (get.ok && getData.success) ? getData.item : item;
+    // 3) Ya estaba validado antes
+    if (data.step === 'YA_VALIDADO') {
+      statusEl.textContent = 'Ya validado ✅';
 
-    statusEl.textContent = 'Kit validado ✅';
+      resultEl.innerHTML = `
+        <p style="margin:0; color:#0a7a2f"><strong>${esc(data.message)}</strong></p>
+        <div style="margin-top:12px">
+          <button id="btnScanAgain" class="btn-mini">Escanear otro</button>
+          <button id="btnVerFicha" class="btn-mini">Ver ficha</button>
+        </div>
+      `;
 
-    // mostrar ficha y botón escanear otro
-    renderDetalleInscripcion(updated);
+      document.getElementById('btnScanAgain')?.addEventListener('click', () => {
+        statusEl.textContent = 'Listo para escanear.';
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+      });
 
-    // opcional: pequeño mensaje arriba o abajo
-    // (si querés mostrar en la misma pantalla del scanner en vez de renderDetalleInscripcion, decime)
-    
+      document.getElementById('btnVerFicha')?.addEventListener('click', () => {
+        renderDetalleInscripcion(data.item);
+      });
+
+      return;
+    }
+
+    // fallback si algo raro llega
+    throw new Error('Respuesta inesperada del servidor');
+
   } catch (e) {
     resultEl.innerHTML = `
       <p style="color:#b00020;margin:0">Error: ${esc(e.message || e)}</p>

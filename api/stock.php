@@ -1,35 +1,33 @@
 <?php
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *'); // Importante para evitar bloqueos
 
-// Configuración global
-include '../includes/config.php';
-// Conexión centralizada
 require_once __DIR__ . '/../includes/db.php';
 
 try {
-    $query = "SELECT carrera, COUNT(*) as total FROM inscripciones GROUP BY carrera";
+    // Consultamos DIRECTAMENTE la tabla de stock físico
+    // Asumimos que la tabla tiene columnas: 'carrera' y 'stock_disponible'
+    $query = "SELECT carrera, stock_disponible FROM stock_remeras";
     $res = $conexion->query($query);
 
-    $inscripciones = [];
+    $stock = [];
+    
+    // Inicializamos en 0 por seguridad
+    $stock['10km'] = 0;
+    $stock['3km'] = 0;
+    $stock['Kids'] = 0;
+
     while ($row = $res->fetch_assoc()) {
-        $inscripciones[$row['carrera']] = (int)$row['total'];
+        // Guardamos el stock real que pusiste en la base de datos
+        // Ejemplo: $stock['10km'] = 0;
+        $stock[$row['carrera']] = (int)$row['stock_disponible'];
     }
-
-    // Límites desde config.php
-    $limites = MARATON_2026_CONFIG['limites_inscripciones'];
-
-    $stock = [
-        '10km'  => ($limites['10km'] ?? 0) - ($inscripciones['10km'] ?? 0),
-        '3km'   => ($limites['3km'] ?? 0) - ($inscripciones['3km'] ?? 0),
-        'Kids'  => ($limites['Kids'] ?? 0) - ($inscripciones['Kids'] ?? 0),
-        // total inscriptos (no stock total). Si querés stock total, te lo cambio.
-        'total' => array_sum($inscripciones),
-    ];
 
     echo json_encode(['success' => true, 'stock' => $stock]);
 
 } catch (Throwable $e) {
     error_log("Error en stock.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al obtener el stock']);
+    echo json_encode(['success' => false, 'message' => 'Error al obtener stock']);
 }
+?>

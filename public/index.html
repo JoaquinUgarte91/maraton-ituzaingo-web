@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Maratón Ituzaingó 2026</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="stylesheet" href="styles.css?v=21220212">
+  <link rel="stylesheet" href="styles.css?v=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -16,21 +16,26 @@
         <img src="imagenes/logos/logoMUNI.png" alt="Logo Municipalidad de Ituzaingó" />
       </a>
     </div>
-    <nav>
+    
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Abrir menú">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <nav id="nav-menu">
       <ul>
-        <li><a href="#inicio">Inicio</a></li>
-        <li><a href="#fundamentacion">Fundamentación</a></li>
-        <li><a href="#recorridos-detallados">Recorridos</a></li>
-        <li><a href="#form-section">Inscribirse</a></li>
-        <li><a href="#contactos">Contactos</a></li>
-        <li><a href="#redes">Redes</a></li>
+        <li><a href="#inicio" onclick="toggleMenu()">Inicio</a></li>
+        <li><a href="#fundamentacion" onclick="toggleMenu()">Fundamentación</a></li>
+        <li><a href="#recorridos-detallados" onclick="toggleMenu()">Recorridos</a></li>
+        <li><a href="#form-section" onclick="toggleMenu()">Inscribirse</a></li>
+        <li><a href="#contactos" onclick="toggleMenu()">Contactos</a></li>
+        <li><a href="#redes" onclick="toggleMenu()">Redes</a></li>
       </ul>
     </nav>
   </header>
 
   <section class="hero" id="inicio">
     <img src="imagenes/banners/fondotipografico.svg" alt="Banner Maratón 2026" class="banner-full">
-    <div class="arrow-down" onclick="document.getElementById('pasos').scrollIntoView({behavior: 'smooth'})">&#9660;</div>
+    <div class="arrow-down" onclick="document.getElementById('pasos').scrollIntoView({behavior: 'smooth'})">▼</div>
   </section>
 
   <section class="pasos" id="pasos">
@@ -201,7 +206,7 @@
 
     <div id="qr-container" class="hidden">
       <h3>¡Inscripción exitosa!</h3>
-      <p>Tu número de corredor: <strong id="numero-corredor"></strong></p>
+      <p>Tu número de identificación: <strong id="numero-corredor"></strong></p>
       <p>Tu código QR para retirar el kit:</p>
       <div id="qr"></div>
       
@@ -235,7 +240,6 @@
     </div>
   </section>
 
-  <!-- SECCIÓN CALENDARIO - OCULTA EN DESKTOP, VISIBLE EN MOBILE -->
   <section class="fecha-section" id="fecha">
     <div class="container">
       <h2>¡Guarda la Fecha!</h2>
@@ -321,7 +325,7 @@
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="script.js?v=99999"></script>
+  <script src="script.js?v=1.0"></script>
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
   <button id="btn-top" style="display:none;">↑</button>

@@ -14,6 +14,7 @@ $adminRole = $_SESSION['admin_role'] ?? null;
 
 // Configuración del evento (opcional, por consistencia)
 include '../includes/config.php';
+
 // Conexión DB
 require_once __DIR__ . '/../includes/db.php';
 
@@ -24,17 +25,26 @@ $q      = trim($_GET['q'] ?? '');
 $sort   = $_GET['sort'] ?? 'fecha_inscripcion';
 $order  = strtoupper($_GET['order'] ?? 'DESC');
 
-// ✅ NUEVO: filtro kit
+// ✅ filtro kit
 $kit = $_GET['kit'] ?? ''; // '', 'pendiente', 'retirado'
+
+// ✅ filtro carrera
+$carrera = trim($_GET['carrera'] ?? ''); // '', '10km', '3km', 'Kids'
 
 // Campos permitidos para ordenar (seguridad)
 $sortWhitelist = ['nombre', 'dni', 'email', 'carrera', 'fecha_inscripcion'];
-if (!in_array($sort, $sortWhitelist)) {
+if (!in_array($sort, $sortWhitelist, true)) {
     $sort = 'fecha_inscripcion';
 }
 $order = $order === 'ASC' ? 'ASC' : 'DESC';
 
-// WHERE dinámico (búsqueda + kit)
+// ✅ Whitelist de carreras permitidas
+$carreraWhitelist = ['10km', '3km', 'Kids'];
+if ($carrera !== '' && !in_array($carrera, $carreraWhitelist, true)) {
+    $carrera = ''; // ignorar valores inválidos
+}
+
+// WHERE dinámico (búsqueda + kit + carrera)
 $whereParts = [];
 $params = [];
 $types = '';
@@ -44,8 +54,14 @@ if ($adminRole === 'admin_externo') {
     $whereParts[] = "carrera = ?";
     $params[] = '10km';
     $types .= 's';
+} else {
+    // carrera (solo si NO es admin_externo)
+    if ($carrera !== '') {
+        $whereParts[] = "carrera = ?";
+        $params[] = $carrera;
+        $types .= 's';
+    }
 }
-
 
 // q
 if ($q !== '') {

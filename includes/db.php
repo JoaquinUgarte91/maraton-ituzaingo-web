@@ -20,3 +20,5 @@ if (
 
 $conexion = new mysqli($host, $user, $pass, $db);
 $conexion->set_charset("utf8mb4");
+$conexion->query("SET time_zone = '-03:00'");
+

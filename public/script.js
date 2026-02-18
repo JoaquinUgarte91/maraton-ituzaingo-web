@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
+// NUEVA FUNCIÓN: MENÚ HAMBURGUESA
+// ========================================
+function toggleMenu() {
+    const nav = document.getElementById('nav-menu');
+    nav.classList.toggle('active');
+}
+
+// ========================================
 // 1. FUNCIÓN DE DESCARGA MANUAL
 // ========================================
 window.descargarManual = function() {
@@ -46,13 +54,77 @@ function inicializarFormulario() {
     }
 }
 
-function actualizarTalles(carrera) {
+async function actualizarTalles(carrera) {
     const select = document.getElementById('talle_remera');
     if (!select) return;
-    select.innerHTML = '<option value="">-- Seleccioná un talle --</option>';
-    let opciones = (carrera === 'Kids') ? ['6', '8', '10', '12', '14'] : ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-    let prefijo = (carrera === 'Kids') ? 'Niño' : 'Adulto';
-    opciones.forEach(t => select.innerHTML += `<option value="${prefijo} ${t}">${prefijo} ${t}</option>`);
+
+    // Buscamos el contenedor padre (.form-group) para ocultar también el Label
+    const contenedorTalle = select.closest('.form-group');
+
+    // Estado de carga
+    select.disabled = true;
+
+    try {
+        // Consultamos al stock en tiempo real
+        const response = await fetch('../api/stock.php?v=' + new Date().getTime());
+        const data = await response.json();
+
+        if (!data.success) throw new Error("Error al consultar stock");
+
+        // Obtenemos el stock (si es undefined asumimos 0 por seguridad)
+        const stockDisponible = data.stock[carrera] !== undefined ? data.stock[carrera] : 0;
+
+        // Limpiamos opciones anteriores
+        select.innerHTML = '';
+
+        // === LÓGICA PRINCIPAL ===
+        if (stockDisponible > 0) {
+            // CASO A: HAY STOCK
+            // 1. Mostramos el campo
+            if (contenedorTalle) contenedorTalle.style.display = 'block';
+            
+            // 2. Lo hacemos obligatorio y habilitamos
+            select.required = true;
+            select.disabled = false;
+            
+            // 3. Generamos las opciones
+            select.innerHTML = '<option value="">-- Seleccioná un talle --</option>';
+            
+            let opciones = [];
+            let prefijo = "";
+
+            if (carrera === 'Kids') {
+                opciones = ['8', '12'];
+                prefijo = 'Niños/as';
+            } else {
+                opciones = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                prefijo = 'Adulto/a';
+            }
+
+            opciones.forEach(t => {
+                select.innerHTML += `<option value="${prefijo} ${t}">${prefijo} Talle ${t}</option>`;
+            });
+
+        } else {
+            // CASO B: NO HAY STOCK (CUPOS AGOTADOS)
+            // 1. Ocultamos todo el campo (Label + Select)
+            if (contenedorTalle) contenedorTalle.style.display = 'none';
+
+            // 2. Le quitamos el 'required'
+            select.required = false;
+            select.disabled = false; // Habilitado para enviar valor oculto
+
+            // 3. Asignamos un valor por defecto oculto
+            select.innerHTML = '<option value="Sujeto a disponibilidad" selected>Sujeto a disponibilidad</option>';
+        }
+
+    } catch (error) {
+        console.error("Error stock:", error);
+        // Fallback: Si falla, mostramos el campo genérico
+        if (contenedorTalle) contenedorTalle.style.display = 'block';
+        select.disabled = false;
+        select.innerHTML = '<option value="Sujeto a disponibilidad">Talle sujeto a disponibilidad</option>';
+    }
 }
 
 function validarEdad() {
@@ -88,7 +160,7 @@ function validarEdad() {
 }
 
 // ========================================
-// 3. ENVÍO DE DATOS (REVISAR SINGULAR/PLURAL)
+// 3. ENVÍO DE DATOS
 // ========================================
 
 async function enviarFormulario(e) {
@@ -118,7 +190,6 @@ async function enviarFormulario(e) {
     data.captcha_token = captchaResponse || 'bypass';
 
     try {
-        // AQUÍ ESTABA EL ERROR: Asegurate de que el archivo sea 'inscripcion.php'
         const response = await fetch('../api/inscripcion.php', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -126,7 +197,6 @@ async function enviarFormulario(e) {
         });
 
         if (response.status === 404) {
-            // Este mensaje ahora coincide con la realidad para no confundirte
             throw new Error("Error 404: El servidor no encuentra '../api/inscripcion.php'.");
         }
 
@@ -139,10 +209,14 @@ async function enviarFormulario(e) {
         }
 
         if (response.ok && result.success) {
-            mostrarQR(result.qr_image, result.numero_corredor, result.carrera);
+            // Pasamos si tiene remera o no a la función mostrarQR
+            mostrarQR(result.qr_image, result.numero_corredor, result.carrera, result.remera_asignada);
+            
             document.getElementById('formulario').reset();
             grecaptcha.reset();
-            mostrarMensaje('¡Inscripción exitosa!', 'success');
+            
+            // === CAMBIO 1: MENSAJE FLOTANTE DE ÉXITO MÁS CLARO ===
+            mostrarMensaje('¡Inscripción exitosa! Revisá tu casilla de SPAM o Correo No Deseado.', 'success');
         } else {
             mostrarMensaje(result.message || 'Error desconocido', 'error');
             grecaptcha.reset();
@@ -162,7 +236,7 @@ async function enviarFormulario(e) {
 // 4. UTILIDADES VISUALES
 // ========================================
 
-function mostrarQR(base64Image, numero, carrera) {
+function mostrarQR(base64Image, numero, carrera, remeraAsignada) {
     const qrDiv = document.getElementById('qr');
     const numeroSpan = document.getElementById('numero-corredor');
     const container = document.getElementById('qr-container');
@@ -172,6 +246,62 @@ function mostrarQR(base64Image, numero, carrera) {
         qrDiv.innerHTML = `<img src="${base64Image}" style="width:200px; height:200px;">`;
     }
     
+    // === ALERTA SI NO HAY STOCK DE REMERA ===
+    // Borramos alertas viejas por si acaso
+    const alertaPrevia = document.getElementById('alerta-remera');
+    if (alertaPrevia) alertaPrevia.remove();
+
+    if (!remeraAsignada) {
+        const alertaDiv = document.createElement('div');
+        alertaDiv.id = 'alerta-remera';
+        alertaDiv.style.cssText = `
+            background-color: #ffebee; 
+            color: #c62828; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+            border: 1px solid #ef9a9a;
+            font-weight: bold;
+            text-align: center;
+        `;
+        alertaDiv.innerHTML = `
+            ⚠️ SU INSCRIPCIÓN HA SUPERADO EL NÚMERO LÍMITE DE KITS.<br>
+            Cualquier consulta comuníquese al <a href="tel:46240898" style="color:#c62828; text-decoration:underline;">4624-0898</a>.
+        `;
+        
+        // Insertamos la alerta después del QR
+        if (qrDiv && qrDiv.parentNode) {
+            qrDiv.parentNode.insertBefore(alertaDiv, qrDiv.nextSibling);
+        }
+    }
+    
+    // === CAMBIO 2: AVISO DE SPAM FIJO ===
+    // Borramos aviso anterior si existe
+    const avisoSpamPrevio = document.getElementById('aviso-spam');
+    if (avisoSpamPrevio) avisoSpamPrevio.remove();
+
+    const avisoSpam = document.createElement('div');
+    avisoSpam.id = 'aviso-spam';
+    avisoSpam.style.cssText = `
+        margin-top: 15px;
+        background-color: #fff3e0;
+        color: #e65100;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        border: 1px solid #ffe0b2;
+        text-align: center;
+        font-size: 0.95rem;
+    `;
+    avisoSpam.innerHTML = `<i class="fas fa-envelope-open-text"></i> ATENCIÓN: El mail de confirmación puede llegar a tu carpeta de SPAM o "Correo No Deseado".`;
+
+    // Lo insertamos antes de la sección de "Información Importante"
+    const infoAdicional = document.querySelector('.info-adicional');
+    if (infoAdicional && infoAdicional.parentNode) {
+        infoAdicional.parentNode.insertBefore(avisoSpam, infoAdicional);
+    }
+    // ========================================
+
     if (container) {
         container.classList.remove('hidden');
         setTimeout(() => {
@@ -188,6 +318,10 @@ function mostrarQR(base64Image, numero, carrera) {
                 if (btnDeslinde) btnDeslinde.style.display = 'inline-block';
                 if (btnAutorizacion) btnAutorizacion.style.display = 'none';
             }
+
+            // Scroll suave para que el usuario vea la alerta
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
         }, 500);
     }
 }
@@ -235,47 +369,60 @@ function inicializarValidacionesRealTime() {
 }
 
 // ========================================
-// 5. FUNCIÓN AGREGAR AL CALENDARIO
+// 5. FUNCIÓN AGREGAR AL CALENDARIO (NATIVA/GOOGLE)
+// ========================================
 
 function agregarACalendario() {
+    // 1. Definimos los datos del evento
     const titulo = "13° Maratón Ituzaingó 2026";
-    const inicio = "20260308T080000"; 
-    const fin = "20260308T120000";    
     const descripcion = "Maratón Corremos Por Más Derechos y Más Igualdad. ¡No te olvides tu QR!";
     const ubicacion = "Ituzaingó, Buenos Aires";
+    
+    // Fechas en formato YYYYMMDDTHHmmss
+    const inicio = "20260308T080000"; 
+    const fin = "20260308T120000";      
 
-    const calendarioTexto = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "METHOD:PUBLISH",
-        "BEGIN:VEVENT",
-        "CLASS:PUBLIC",
-        `DTSTART:${inicio}`,
-        `DTEND:${fin}`,
-        `SUMMARY:${titulo}`,
-        `DESCRIPTION:${descripcion}`,
-        `LOCATION:${ubicacion}`,
-        "TRANSP:TRANSPARENT",
-        "END:VEVENT",
-        "END:VCALENDAR"
-    ].join("\n");
+    // 2. Detectamos si el usuario está en un iPhone/iPad
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    // Creamos un Blob (archivo en memoria) con el tipo de contenido específico
-    const blob = new Blob([calendarioTexto], { type: "text/calendar;charset=utf-8" });
-    const url = window.URL.createObjectURL(blob);
-    
-    // Creamos el link de descarga
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "maraton-ituzaingo-2026.ics");
-    
-    // Lo agregamos, lo clickeamos y lo borramos
-    document.body.appendChild(link);
-    link.click();
-    
-    // Limpieza de memoria
-    setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    }, 100);
+    if (isIOS) {
+        // === MODO IPHONE (iOS) ===
+        const calendarioTexto = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//Municipalidad Ituzaingo//Maraton//ES",
+            "BEGIN:VEVENT",
+            "UID:" + Date.now() + "@maratonituzaingo.gov.ar",
+            "DTSTAMP:" + inicio + "Z", 
+            "DTSTART:" + inicio,
+            "DTEND:" + fin,
+            "SUMMARY:" + titulo,
+            "DESCRIPTION:" + descripcion,
+            "LOCATION:" + ubicacion,
+            "END:VEVENT",
+            "END:VCALENDAR"
+        ].join("\n");
+
+        const blob = new Blob([calendarioTexto], { type: "text/calendar;charset=utf-8" });
+        const url = window.URL.createObjectURL(blob);
+        
+        // TRUCO: Navegar al archivo hace que iOS abra el gestor de calendario
+        window.location.assign(url);
+        
+        // Limpieza (opcional, con delay para dar tiempo a iOS)
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+        }, 2000);
+
+    } else {
+        // === MODO ANDROID Y PC (Google Calendar) ===
+        const gTitle = encodeURIComponent(titulo);
+        const gDesc = encodeURIComponent(descripcion);
+        const gLoc = encodeURIComponent(ubicacion);
+        
+        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gTitle}&dates=${inicio}/${fin}&details=${gDesc}&location=${gLoc}&sf=true&output=xml`;
+        
+        // Abrimos en una pestaña nueva
+        window.open(googleUrl, '_blank');
+    }
 }
