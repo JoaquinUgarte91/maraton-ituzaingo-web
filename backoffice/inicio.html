@@ -6,6 +6,7 @@
   <title>Admin Panel</title>
   <link rel="stylesheet" href="inicio.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="./config.js"></script>
   <script src="https://unpkg.com/html5-qrcode" defer></script>
 
 
@@ -24,41 +25,39 @@
 
       <!-- LOGOUT -->
       <a href="#" class="nav-item" id="btn-logout">
-        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesiÃ³n
       </a>
     </nav>
   </aside>
 
   <main class="main-content" id="main-content">
-    <h1>Bienvenido al Panel de Administración</h1>
+    <h1>Bienvenido al Panel de AdministraciÃ³n</h1>
   </main>
 
   <script>
   
 // ======================================================
-// 🔐 PROTECCIÓN DE SESIÓN (SI NO HAY LOGIN → REDIRECT)
+// ðŸ” PROTECCIÃ“N DE SESIÃ“N (SI NO HAY LOGIN â†’ REDIRECT)
 // ======================================================
 window.__ME__ = null;
 
 (async () => {
   try {
-    const res = await fetch('/api/me.php', {
-      credentials: 'include'
-    });
+    const res = await fetch(`${BASE}/api/me.php`, { credentials: 'include' });
 
     const data = await res.json().catch(() => ({}));
 
-    // si no está autenticado → volver al login
+    // si no estÃ¡ autenticado â†’ volver al login
     if (!res.ok || !data.ok) {
       window.location.href = './index.html';
       return;
     }
 
-    // ✅ guardamos el admin (id, username, role, scope_kit)
+    // âœ… guardamos el admin (id, username, role, scope_kit)
     window.__ME__ = data.admin || null;
 
     // ======================================================
-    // ✅ PUNTO 1: ocultar tab "Administrar usuarios"
+    // âœ… PUNTO 1: ocultar tab "Administrar usuarios"
     // (solo debe verse para admin_total)
     // ======================================================
     const role = window.__ME__?.role ?? null;
@@ -92,10 +91,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   document.getElementById('btn-logout')?.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
-      await fetch('/api/logout.php', {
-        method: 'POST',
-        credentials: 'include'
-      });
+      await fetch(`${BASE}/api/logout.php`, { method:'POST', credentials:'include' });
     } finally {
       window.location.href = './index.html';
     }
@@ -105,8 +101,8 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   // LISTADO INSCRIPCIONES + CSV
   // ======================================================
 
-  const LISTAR_URL = '/api/listar_inscripciones.php';
-  let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '', carrera: '', page: 1, pageSize: 20 };
+  const LISTAR_URL = `${BASE}/api/listar_inscripciones.php`;
+    let filtroActual = { q: '', sort: 'fecha_inscripcion', order: 'desc', kit: '', carrera: '', page: 1, pageSize: 20 };
 
   async function cargarInscripciones({ q = '', page = 1, pageSize = 20 } = {}) {
     const main = document.getElementById('main-content');
@@ -128,7 +124,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
     filtroActual.page = page;
     filtroActual.pageSize = pageSize;
 
-    // Calcular páginas
+    // Calcular pÃ¡ginas
     const total = Number(data.total || 0);
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -136,7 +132,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
     const hasNext = currentPage < totalPages;
 
 
-      // ✅ ACÁ (PUNTO 1): permisos según rol
+      // âœ… ACÃ (PUNTO 1): permisos segÃºn rol
       const role = window.__ME__?.role;
       const canWrite = role === 'admin_total';
       
@@ -202,7 +198,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
               <th>DNI</th>
               <th>Email</th>
               <th>Distancia</th>
-              <th>Fecha inscripción</th>
+              <th>Fecha inscripciÃ³n</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -213,7 +209,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
         
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
   <div style="opacity:.75">
-    Página <strong>${currentPage}</strong> de <strong>${totalPages}</strong> — Total: ${total}
+    PÃ¡gina <strong>${currentPage}</strong> de <strong>${totalPages}</strong> â€” Total: ${total}
   </div>
 
   <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -229,7 +225,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
 
     <select id="pageSizeSelect" class="btn-mini" style="padding:8px 10px;">
       ${[10,20,50,100].map(s=>`
-        <option value="${s}" ${s===pageSize?'selected':''}>${s} por página</option>
+        <option value="${s}" ${s===pageSize?'selected':''}>${s} por pÃ¡gina</option>
       `).join('')}
     </select>
     
@@ -265,7 +261,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
       
 
 
-      // ✅ (AGREGADO MÍNIMO) Delegación de eventos para botones CRUD
+      // âœ… (AGREGADO MÃNIMO) DelegaciÃ³n de eventos para botones CRUD
       document.querySelector('#main-content tbody')?.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action][data-id]');
         if (!btn) return;
@@ -371,7 +367,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
   function limpiarNombre(s){ return String(s).replace(/[^a-z0-9_-]+/gi,'_').slice(0,40); }
   function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
 
-  // ✅ (AGREGADO MÍNIMO) Estilos para botones mini (solo si no existen)
+  // âœ… (AGREGADO MÃNIMO) Estilos para botones mini (solo si no existen)
   (function addMiniBtnStyles(){
     if (document.getElementById('mini-btn-styles')) return;
     const css = `
@@ -384,7 +380,7 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
     document.head.appendChild(s);
   })();
 
-  // ✅ (AGREGADO MÍNIMO) Funciones CRUD
+  // âœ… (AGREGADO MÃNIMO) Funciones CRUD
   async function onAccionUsuario(action, id){
     if (action === 'ver') return verInscripcion(id);
     if (action === 'editar') return editarInscripcion(id);
@@ -393,18 +389,18 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
 
   async function verInscripcion(id){
   const main = document.getElementById('main-content');
-  main.innerHTML = `<h2>Ver inscripción</h2><p style="opacity:.8">Cargando...</p>`;
+  main.innerHTML = `<h2>Ver inscripciÃ³n</h2><p style="opacity:.8">Cargando...</p>`;
 
   try {
-    const res = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
+    const res = await fetch(`${BASE}/api/inscripcion_get.php?id=${id}`, { credentials:'include' });
     const data = await res.json().catch(()=> ({}));
-    if (!res.ok || !data.success) throw new Error(data.message || 'Error al traer inscripción');
+    if (!res.ok || !data.success) throw new Error(data.message || 'Error al traer inscripciÃ³n');
 
     renderDetalleInscripcion(data.item);
 
   } catch (e) {
     main.innerHTML = `
-      <h2>Ver inscripción</h2>
+      <h2>Ver inscripciÃ³n</h2>
       <p style="color:#b00020">Error: ${esc(e.message)}</p>
       <button id="btnVolverListado" class="btn-mini">Volver</button>
     `;
@@ -416,13 +412,13 @@ if (menuScanQr && !['admin_total', 'admin_visualizador'].includes(role)) {
 
 
   async function editarInscripcion(id){
-  const res = await fetch(`/api/inscripcion_get.php?id=${id}`, {
+  const res = await fetch(`${BASE}/api/inscripcion_get.php?id=${id}`, {
     credentials: 'include'
   });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.success) {
-    alert(data.message || 'Error al traer inscripción');
+    alert(data.message || 'Error al traer inscripciÃ³n');
     return;
   }
 
@@ -482,7 +478,7 @@ function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar
       <div class="modal" role="dialog" aria-modal="true">
         <div class="header">
           <span>${esc(titulo)}</span>
-          <button class="btn-x" aria-label="Cerrar">✕</button>
+          <button class="btn-x" aria-label="Cerrar">âœ•</button>
         </div>
         <div class="body">
           <p style="margin:0">${esc(mensaje)}</p>
@@ -522,8 +518,8 @@ function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar
 
   async function eliminarInscripcion(id){
   const ok = await abrirModalConfirmacion({
-    titulo: 'Eliminar inscripción',
-    mensaje: '¿Seguro que querés eliminar esta inscripción? Esta acción no se puede deshacer.',
+    titulo: 'Eliminar inscripciÃ³n',
+    mensaje: 'Â¿Seguro que querÃ©s eliminar esta inscripciÃ³n? Esta acciÃ³n no se puede deshacer.',
     textoConfirmar: 'Eliminar',
     textoCancelar: 'Cancelar',
     danger: true
@@ -532,7 +528,7 @@ function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar
   if (!ok) return;
 
   try {
-    const del = await fetch('/api/inscripcion_delete.php', {
+    const del = await fetch(`${BASE}/api/inscripcion_delete.php`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
@@ -550,18 +546,18 @@ function abrirModalConfirmacion({ titulo='Confirmar', mensaje='', textoConfirmar
 
   } catch (e) {
     console.error(e);
-    alert('Error de conexión con el servidor');
+    alert('Error de conexiÃ³n con el servidor');
   }
 }
 
 async function toggleKitRetiro(id, value) {
   const msg = value === 1
-    ? '¿Confirmar que el usuario retiró el kit?'
-    : '¿Desmarcar retiro de kit?';
+    ? 'Â¿Confirmar que el usuario retirÃ³ el kit?'
+    : 'Â¿Desmarcar retiro de kit?';
 
   if (!confirm(msg)) return;
 
-  const res = await fetch('/api/kit_toggle.php', {
+  const res = await fetch(`${BASE}/api/kit_toggle.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -574,8 +570,8 @@ async function toggleKitRetiro(id, value) {
     return;
   }
 
-  // ✅ refrescar trayendo el usuario actualizado
-  const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+  // âœ… refrescar trayendo el usuario actualizado
+  const get = await fetch(`${BASE}/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
   const getData = await get.json().catch(() => ({}));
   if (get.ok && getData.success) {
     renderDetalleInscripcion(getData.item);
@@ -593,14 +589,14 @@ async function toggleKitRetiro(id, value) {
   const v = (x) => esc(x ?? '');
   const fecha = (x) => v(formatearFecha(x));
 
-  // ✅ permisos según rol (usa lo que ya guardaste en window.__ME__)
+  // âœ… permisos segÃºn rol (usa lo que ya guardaste en window.__ME__)
   const role = window.__ME__?.role ?? null;
   const canWrite = role === 'admin_total'; // solo admin_total puede editar/eliminar
   const canToggleKit = role === 'admin_total' || role === 'admin_visualizador';
 
   main.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
-      <h2 style="margin:0">Inscripción #${v(u.id)}</h2>
+      <h2 style="margin:0">InscripciÃ³n #${v(u.id)}</h2>
 
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
         <button id="btnVolverListado" class="btn-mini">Volver</button>
@@ -627,17 +623,17 @@ async function toggleKitRetiro(id, value) {
     </div>
 
     <div class="card">
-      <div class="header">Inscripción</div>
+      <div class="header">InscripciÃ³n</div>
       <div class="content">
         <table class="simple">
           <tbody>
             <tr><th style="width:240px">Carrera</th><td>${v(u.carrera)}</td></tr>
             <tr><th>Talle remera</th><td>${v(u.talle_remera)}</td></tr>
-            <tr><th>Fecha inscripción</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
-            <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? '✅ Retirado' : '❌ Pendiente'}</td></tr>
+            <tr><th>Fecha inscripciÃ³n</th><td>${fecha(u.fecha_inscripcion)}</td></tr>
+            <tr><th>Retiro de kit</th><td>${(u.kit_retirado == 1 || u.kit_retirado === true) ? 'âœ… Retirado' : 'âŒ Pendiente'}</td></tr>
             <tr><th>Fecha retiro</th><td>${u.kit_retirado_at ? fecha(u.kit_retirado_at) : ''}</td></tr>
             <tr>
-  <th>Número de corredor</th>
+  <th>NÃºmero de corredor</th>
   <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
     <input id="ver_numero" type="number" min="1" max="10000" step="1" inputmode="numeric"
            value="${u.numero_corredor ?? ''}"
@@ -652,8 +648,8 @@ async function toggleKitRetiro(id, value) {
   <th>Remera</th>
   <td>${
     (u.remera_asignada == 1 || u.remera_asignada === true)
-      ? ((u.remera_retirada == 1 || u.remera_retirada === true) ? '🎽 ✅ Retirada' : '🎽 ❌ Pendiente')
-      : '🚫 No recibe remera'
+      ? ((u.remera_retirada == 1 || u.remera_retirada === true) ? 'ðŸŽ½ âœ… Retirada' : 'ðŸŽ½ âŒ Pendiente')
+      : 'ðŸš« No recibe remera'
   }</td>
 </tr>
 
@@ -667,9 +663,9 @@ async function toggleKitRetiro(id, value) {
       <div class="content">
         <table class="simple">
           <tbody>
-            <tr><th style="width:240px">Cobertura médica</th><td>${v(u.cobertura_medica)}</td></tr>
-            <tr><th>N° afiliado</th><td>${v(u.numero_afiliado)}</td></tr>
-            <tr><th>Teléfono emergencia</th><td>${v(u.telefono_emergencia)}</td></tr>
+            <tr><th style="width:240px">Cobertura mÃ©dica</th><td>${v(u.cobertura_medica)}</td></tr>
+            <tr><th>NÂ° afiliado</th><td>${v(u.numero_afiliado)}</td></tr>
+            <tr><th>TelÃ©fono emergencia</th><td>${v(u.telefono_emergencia)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -680,7 +676,7 @@ async function toggleKitRetiro(id, value) {
     cargarInscripciones({ q: filtroActual.q, page: 1, pageSize: 20 });
   });
 
-  // ✅ Solo si existen (admin_total), conectamos handlers
+  // âœ… Solo si existen (admin_total), conectamos handlers
   document.getElementById('btnEditarDesdeVer')?.addEventListener('click', () => {
     editarInscripcion(u.id);
   });
@@ -697,18 +693,18 @@ async function toggleKitRetiro(id, value) {
   const input = document.getElementById('ver_numero');
   const raw = (input?.value ?? '').trim();
 
-  // vacío => NULL (limpiar número)
+  // vacÃ­o => NULL (limpiar nÃºmero)
   const numero_corredor = raw === '' ? null : Number(raw);
 
-  // validación cliente
+  // validaciÃ³n cliente
   if (numero_corredor !== null && (!Number.isInteger(numero_corredor) || numero_corredor < 1 || numero_corredor > 10000)) {
     msg.style.color = '#b00020';
-    msg.textContent = 'Número inválido (1 a 10000)';
+    msg.textContent = 'NÃºmero invÃ¡lido (1 a 10000)';
     return;
   }
 
   try {
-    const res = await fetch('/api/inscripcion_set_numero.php', {
+    const res = await fetch(`${BASE}/api/inscripcion_set_numero.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -724,21 +720,21 @@ async function toggleKitRetiro(id, value) {
     }
 
     msg.style.color = '#0a7a2f';
-    msg.textContent = 'Guardado ✅';
+    msg.textContent = 'Guardado âœ…';
 
     // refrescar ficha para ver el valor persistido
-    const get = await fetch(`/api/inscripcion_get.php?id=${u.id}`, { credentials:'include' });
+    const get = await fetch(`${BASE}/api/inscripcion_get.php?id=${u.id}`, { credentials:'include' });
     const getData = await get.json().catch(()=> ({}));
     if (get.ok && getData.success) renderDetalleInscripcion(getData.item);
 
   } catch (e) {
     msg.style.color = '#b00020';
-    msg.textContent = 'Error de conexión';
+    msg.textContent = 'Error de conexiÃ³n';
   }
 });
 
 
-  // ✅ Esto SÍ debe estar permitido para visualizador/external
+  // âœ… Esto SÃ debe estar permitido para visualizador/external
   if (canToggleKit) {
   document.getElementById('btnKitToggle')?.addEventListener('click', () => {
     const yaRetiro = (u.kit_retirado == 1 || u.kit_retirado === true);
@@ -746,7 +742,7 @@ async function toggleKitRetiro(id, value) {
   });
 }
 
-  // texto del botón según estado
+  // texto del botÃ³n segÃºn estado
   if (canToggleKit) {
   const btnKit = document.getElementById('btnKitToggle');
   if (btnKit) {
@@ -764,7 +760,7 @@ function renderEditarInscripcion(u) {
 
   main.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
-      <h2 style="margin:0">Editar inscripción #${v(u.id)}</h2>
+      <h2 style="margin:0">Editar inscripciÃ³n #${v(u.id)}</h2>
 
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
         <button id="btnCancelarEdicion" class="btn-mini">Cancelar</button>
@@ -801,7 +797,7 @@ function renderEditarInscripcion(u) {
     </div>
 
     <div class="card">
-      <div class="header">Inscripción</div>
+      <div class="header">InscripciÃ³n</div>
       <div class="content">
         <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
           <div>
@@ -826,17 +822,17 @@ function renderEditarInscripcion(u) {
       <div class="content">
         <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
           <div>
-            <label>Cobertura médica</label>
+            <label>Cobertura mÃ©dica</label>
             <input id="ed_cobertura_medica" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
                    value="${v(u.cobertura_medica)}" />
           </div>
           <div>
-            <label>N° afiliado</label>
+            <label>NÂ° afiliado</label>
             <input id="ed_numero_afiliado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
                    value="${v(u.numero_afiliado)}" />
           </div>
           <div>
-            <label>Teléfono emergencia</label>
+            <label>TelÃ©fono emergencia</label>
             <input id="ed_telefono_emergencia" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"
                    value="${v(u.telefono_emergencia)}" />
           </div>
@@ -863,7 +859,7 @@ function renderCrearInscripcion(){
 
   main.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between">
-      <h2 style="margin:0">Nueva inscripción</h2>
+      <h2 style="margin:0">Nueva inscripciÃ³n</h2>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
         <button id="btnCancelarCrear" class="btn-mini">Cancelar</button>
         <button id="btnGuardarCrear" class="btn-mini">Crear</button>
@@ -895,7 +891,7 @@ function renderCrearInscripcion(){
     </div>
 
     <div class="card">
-      <div class="header">Inscripción</div>
+      <div class="header">InscripciÃ³n</div>
       <div class="content">
         <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
           <div>
@@ -921,15 +917,15 @@ function renderCrearInscripcion(){
       <div class="content">
         <div style="display:grid; grid-template-columns:repeat(2,minmax(240px,1fr)); gap:12px">
           <div>
-            <label>Cobertura médica</label>
+            <label>Cobertura mÃ©dica</label>
             <input id="cr_cobertura_medica" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
           </div>
           <div>
-            <label>N° afiliado</label>
+            <label>NÂ° afiliado</label>
             <input id="cr_numero_afiliado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
           </div>
           <div>
-            <label>Teléfono emergencia</label>
+            <label>TelÃ©fono emergencia</label>
             <input id="cr_telefono_emergencia" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px" />
           </div>
         </div>
@@ -1002,14 +998,14 @@ async function guardarEdicionInscripcion(id) {
     telefono_emergencia: document.getElementById('ed_telefono_emergencia')?.value.trim() || ''
   };
 
-  // validaciones mínimas
+  // validaciones mÃ­nimas
   if (!payload.nombre || !payload.dni || !payload.email || !payload.carrera) {
     if (errEl) errEl.textContent = 'Nombre, DNI, Email y Carrera son obligatorios.';
     return;
   }
 
   try {
-    const up = await fetch('/api/inscripcion_update.php', {
+    const up = await fetch(`${BASE}/api/inscripcion_update.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -1026,14 +1022,14 @@ async function guardarEdicionInscripcion(id) {
 if (okEl) {
   okEl.style.transition = '';
   okEl.style.opacity = '1';
-  okEl.textContent = 'Guardado correctamente ✅';
+  okEl.textContent = 'Guardado correctamente âœ…';
 }
 
 // 2) Traer data actualizada
-const get = await fetch(`/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
+const get = await fetch(`${BASE}/api/inscripcion_get.php?id=${id}`, { credentials: 'include' });
 const getData = await get.json().catch(() => ({}));
 
-// 3) Esperar 2s y recién ahí cambiar de pantalla (Ver/Listado)
+// 3) Esperar 2s y reciÃ©n ahÃ­ cambiar de pantalla (Ver/Listado)
 setTimeout(() => {
   if (get.ok && getData.success) {
     renderDetalleInscripcion(getData.item);
@@ -1045,7 +1041,7 @@ setTimeout(() => {
 
   } catch (e) {
     console.error(e);
-    if (errEl) errEl.textContent = 'Error de conexión con el servidor.';
+    if (errEl) errEl.textContent = 'Error de conexiÃ³n con el servidor.';
   }
 }
 
@@ -1073,7 +1069,7 @@ async function guardarNuevaInscripcion(){
   }
 
   try {
-    const res = await fetch('/api/inscripcion_create.php', {
+    const res = await fetch(`${BASE}/api/inscripcion_create.php`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
@@ -1086,9 +1082,9 @@ async function guardarNuevaInscripcion(){
       return;
     }
 
-    if (okEl) okEl.textContent = 'Creado ✅';
+    if (okEl) okEl.textContent = 'Creado âœ…';
 
-    // ir a ver el detalle recién creado (si la API devuelve id)
+    // ir a ver el detalle reciÃ©n creado (si la API devuelve id)
     if (data.id) {
       verInscripcion(data.id);
       return;
@@ -1099,17 +1095,17 @@ async function guardarNuevaInscripcion(){
 
   } catch (e) {
     console.error(e);
-    if (errEl) errEl.textContent = 'Error de conexión con el servidor.';
+    if (errEl) errEl.textContent = 'Error de conexiÃ³n con el servidor.';
   }
 }
 
-  // Menú → "Usuarios registrados"
+  // MenÃº â†’ "Usuarios registrados"
   document.getElementById('menu-usuarios').addEventListener('click', e => {
     e.preventDefault();
     cargarInscripciones();
   });
 
-  // Menú → "Administrar usuarios" (ADMINS)
+  // MenÃº â†’ "Administrar usuarios" (ADMINS)
   document.getElementById('menu-admins')?.addEventListener('click', (e) => {
     e.preventDefault();
     renderAdmins();
@@ -1148,9 +1144,9 @@ async function guardarNuevaInscripcion(){
     const DEMO = {
       total: 342, k10: 210, k3: 132, hoy: 8,
       ultimas: [
-        { nombre:'Ana González', dni:'12345678', email:'ana@example.com', carrera:'10km', fecha:'2025-09-20 10:21:00' },
-        { nombre:'Luis Pérez', dni:'23456789', email:'luis@example.com', carrera:'3km', fecha:'2025-09-20 09:15:10' },
-        { nombre:'María Rodríguez', dni:'34567890', email:'maria@example.com', carrera:'Kids', fecha:'2025-09-19 18:03:34' },
+        { nombre:'Ana GonzÃ¡lez', dni:'12345678', email:'ana@example.com', carrera:'10km', fecha:'2025-09-20 10:21:00' },
+        { nombre:'Luis PÃ©rez', dni:'23456789', email:'luis@example.com', carrera:'3km', fecha:'2025-09-20 09:15:10' },
+        { nombre:'MarÃ­a RodrÃ­guez', dni:'34567890', email:'maria@example.com', carrera:'Kids', fecha:'2025-09-19 18:03:34' },
       ]
     };
 
@@ -1168,7 +1164,7 @@ async function guardarNuevaInscripcion(){
       </div>
 
       <div class="card">
-        <div class="header">Últimas inscripciones (demo)</div>
+        <div class="header">Ãšltimas inscripciones (demo)</div>
         <div class="content">
           <table class="simple">
             <thead><tr><th>Nombre</th><th>DNI</th><th>Email</th><th>Carrera</th><th>Fecha</th></tr></thead>
@@ -1188,7 +1184,7 @@ async function guardarNuevaInscripcion(){
     `;
   }
 
-  // Click del menú Dashboard → render demo
+  // Click del menÃº Dashboard â†’ render demo
   document.querySelector('#menu-dashboard')?.addEventListener('click', (e)=>{
     e.preventDefault();
     renderDashboard();
@@ -1198,17 +1194,17 @@ async function guardarNuevaInscripcion(){
   document.addEventListener('DOMContentLoaded', renderDashboard);
 
   // =======================
-  // VISTA: MARATONES (CSV históricos)
+  // VISTA: MARATONES (CSV histÃ³ricos)
   // =======================
   function renderMaratones() {
     const main = document.getElementById('main-content');
 
     main.innerHTML = `
-      <h2>Maratones (histórico)</h2>
+      <h2>Maratones (histÃ³rico)</h2>
 
       <div style="margin-top:12px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
         <p style="margin:0 0 10px 0; opacity:.8">
-          Importá un CSV con columnas:
+          ImportÃ¡ un CSV con columnas:
           <code>edicion,nombre,dni,email,carrera,fecha_inscripcion</code>
         </p>
 
@@ -1223,7 +1219,7 @@ async function guardarNuevaInscripcion(){
 
       <div style="margin-top:16px; padding:12px; border:1px solid #eee; border-radius:12px; background:#fff;">
         <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-          <h3 style="margin:0">Listado histórico</h3>
+          <h3 style="margin:0">Listado histÃ³rico</h3>
 
           <select id="filtroEdicion" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
             <option value="">Todas las ediciones</option>
@@ -1257,7 +1253,7 @@ async function guardarNuevaInscripcion(){
 
     const file = fileInput.files?.[0];
     if (!file) {
-      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Seleccioná un archivo .csv</p>`;
+      resultBox.innerHTML = `<p style="color:#b00020;margin:0">SeleccionÃ¡ un archivo .csv</p>`;
       return;
     }
 
@@ -1267,7 +1263,7 @@ async function guardarNuevaInscripcion(){
     resultBox.innerHTML = `<p style="margin:0;opacity:.8">Importando...</p>`;
 
     try {
-      const res = await fetch('/api/historico_importar.php', {
+      const res = await fetch(`${BASE}/api/historico_importar.php`, {
         method: 'POST',
         body: fd,
         credentials: 'include'
@@ -1298,7 +1294,7 @@ async function guardarNuevaInscripcion(){
 
     } catch (e) {
       console.error(e);
-      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error de conexión con el servidor</p>`;
+      resultBox.innerHTML = `<p style="color:#b00020;margin:0">Error de conexiÃ³n con el servidor</p>`;
     }
   }
 
@@ -1321,11 +1317,11 @@ async function guardarNuevaInscripcion(){
     tabla.innerHTML = 'Cargando...';
 
     try {
-      const url = `/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
+      const url = `${BASE}/api/historico_listar.php?limit=${historicoFiltro.pageSize}&offset=${offset}&q=${encodeURIComponent(historicoFiltro.q)}&edicion=${encodeURIComponent(historicoFiltro.edicion)}`;
       const res = await fetch(url, { credentials: 'include' });
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar histórico');
+      if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo cargar histÃ³rico');
 
       // cargar opciones de ediciones una vez
       if (selEd.options.length <= 1 && Array.isArray(data.ediciones)) {
@@ -1356,12 +1352,12 @@ async function guardarNuevaInscripcion(){
         <table style="width:100%; border-collapse:collapse">
           <thead>
             <tr>
-              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Edición</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">EdiciÃ³n</th>
               <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Nombre</th>
               <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">DNI</th>
               <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Email</th>
               <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Carrera</th>
-              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Fecha inscripción</th>
+              <th style="text-align:left; padding:10px; border:1px solid #eee; background:#2f323a; color:#fff;">Fecha inscripciÃ³n</th>
             </tr>
           </thead>
           <tbody>
@@ -1374,7 +1370,7 @@ async function guardarNuevaInscripcion(){
     }
   }
 
-  // Click del menú "Maratones"
+  // Click del menÃº "Maratones"
   document.getElementById('menu-maratones')?.addEventListener('click', (e) => {
     e.preventDefault();
     renderMaratones();
@@ -1386,12 +1382,12 @@ async function guardarNuevaInscripcion(){
 async function renderAdmins() {
   const main = document.getElementById('main-content');
 
-  // chequeo rol desde sesión (frontend)
+  // chequeo rol desde sesiÃ³n (frontend)
   const role = window.__ME__?.role;
   if (role !== 'admin_total') {
     main.innerHTML = `
       <h2>Administrar usuarios</h2>
-      <p style="color:#b00020">No tenés permisos para acceder a esta pantalla.</p>
+      <p style="color:#b00020">No tenÃ©s permisos para acceder a esta pantalla.</p>
     `;
     return;
   }
@@ -1446,7 +1442,7 @@ async function renderAdmins() {
     };
 
     try {
-      const res = await fetch('/api/admins_create.php', {
+      const res = await fetch(`${BASE}/api/admins_create.php`, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         credentials: 'include',
@@ -1457,7 +1453,7 @@ async function renderAdmins() {
       if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo crear');
 
       msg.style.color = '#0a7a2f';
-      msg.textContent = 'Admin creado ✅';
+      msg.textContent = 'Admin creado âœ…';
       e.target.reset();
       await cargarAdminsTabla();
     } catch (err) {
@@ -1473,7 +1469,7 @@ async function cargarAdminsTabla(){
   box.textContent = 'Cargando...';
 
   try {
-    const res = await fetch('/api/admins_list.php', { credentials:'include' });
+    const res = await fetch(`${BASE}/api/admins_list.php`, { credentials:'include' });
     const data = await res.json().catch(()=> ({}));
 
     if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo listar');
@@ -1486,7 +1482,7 @@ async function cargarAdminsTabla(){
         <td>${esc(a.username)}</td>
         <td>${esc(a.role || '')}</td>
         <td>${esc(a.scope_kit || '')}</td>
-        <td>${a.is_active == 1 ? 'Sí' : 'No'}</td>
+        <td>${a.is_active == 1 ? 'SÃ­' : 'No'}</td>
         <td>${esc(a.created_at || '')}</td>
         <td style="white-space:nowrap">
           <button class="btn-mini" data-admin-action="pass" data-id="${a.id}" data-username="${esc(a.username)}">
@@ -1512,7 +1508,7 @@ async function cargarAdminsTabla(){
       </table>
     `;
 
-    // Delegación de eventos (una sola vez)
+    // DelegaciÃ³n de eventos (una sola vez)
     box.querySelector('table')?.addEventListener('click', async (e) => {
       const btn = e.target.closest('button[data-admin-action][data-id]');
       if (!btn) return;
@@ -1536,15 +1532,15 @@ async function cargarAdminsTabla(){
 }
 
 async function uiCambiarPasswordAdmin({ id, username }) {
-  const newPass = prompt(`Nueva contraseña para "${username}" (mínimo 6 caracteres):`);
+  const newPass = prompt(`Nueva contraseÃ±a para "${username}" (mÃ­nimo 6 caracteres):`);
   if (newPass == null) return; // cancel
   if (newPass.trim().length < 6) {
-    alert('La contraseña debe tener al menos 6 caracteres.');
+    alert('La contraseÃ±a debe tener al menos 6 caracteres.');
     return;
   }
 
   try {
-    const res = await fetch('/api/admins_update_password.php', {
+    const res = await fetch(`${BASE}/api/admins_update_password.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -1552,9 +1548,9 @@ async function uiCambiarPasswordAdmin({ id, username }) {
     });
 
     const data = await res.json().catch(()=> ({}));
-    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo actualizar la contraseña');
+    if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo actualizar la contraseÃ±a');
 
-    alert('Contraseña actualizada ✅');
+    alert('ContraseÃ±a actualizada âœ…');
   } catch (e) {
     alert(e.message);
   }
@@ -1564,15 +1560,15 @@ async function uiEliminarAdmin({ id, username }) {
   // opcional: evitar borrarte a vos misma/o
   const myId = window.__ME__?.id;
   if (myId && Number(myId) === Number(id)) {
-    alert('No podés eliminar tu propio usuario mientras estás logueado.');
+    alert('No podÃ©s eliminar tu propio usuario mientras estÃ¡s logueado.');
     return;
   }
 
-  const ok = confirm(`¿Eliminar (desactivar) al admin "${username}"?`);
+  const ok = confirm(`Â¿Eliminar (desactivar) al admin "${username}"?`);
   if (!ok) return;
 
   try {
-    const res = await fetch('/api/admins_delete.php', {
+    const res = await fetch(`${BASE}/api/admins_delete.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -1582,7 +1578,7 @@ async function uiEliminarAdmin({ id, username }) {
     const data = await res.json().catch(()=> ({}));
     if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo eliminar');
 
-    alert('Admin eliminado (desactivado) ✅');
+    alert('Admin eliminado (desactivado) âœ…');
     await cargarAdminsTabla();
   } catch (e) {
     alert(e.message);
@@ -1601,10 +1597,10 @@ function renderLectorQR(){
     <h2>Escanear QR (token cifrado)</h2>
 
     <div class="card" style="margin-top:16px">
-      <div class="header">Escanear con cámara</div>
+      <div class="header">Escanear con cÃ¡mara</div>
       <div class="content">
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px">
-          <button id="btnStartScan" class="btn-mini">Iniciar cámara</button>
+          <button id="btnStartScan" class="btn-mini">Iniciar cÃ¡mara</button>
           <button id="btnStopScan" class="btn-mini" disabled>Detener</button>
           <select id="cameraSelect" class="btn-mini" style="padding:8px 10px"></select>
           <span id="scanStatus" style="opacity:.75"></span>
@@ -1634,20 +1630,20 @@ async function initQrScanner(){
   resultEl.innerHTML = '';
   statusEl.textContent = 'Listo para escanear.';
 
-  // Asegura que la lib esté cargada
+  // Asegura que la lib estÃ© cargada
   if (typeof Html5Qrcode === 'undefined') {
-    statusEl.textContent = 'No cargó la librería de cámara (html5-qrcode).';
+    statusEl.textContent = 'No cargÃ³ la librerÃ­a de cÃ¡mara (html5-qrcode).';
     statusEl.style.color = '#b00020';
     return;
   }
 
-  // listar cámaras
+  // listar cÃ¡maras
   try {
     const devices = await Html5Qrcode.getCameras();
     cameraSel.innerHTML = '';
 
     if (!devices || devices.length === 0) {
-      statusEl.textContent = 'No se encontraron cámaras disponibles.';
+      statusEl.textContent = 'No se encontraron cÃ¡maras disponibles.';
       statusEl.style.color = '#b00020';
       return;
     }
@@ -1655,11 +1651,11 @@ async function initQrScanner(){
     devices.forEach((d, i) => {
       const opt = document.createElement('option');
       opt.value = d.id;
-      opt.textContent = d.label || `Cámara ${i+1}`;
+      opt.textContent = d.label || `CÃ¡mara ${i+1}`;
       cameraSel.appendChild(opt);
     });
   } catch (e) {
-    statusEl.textContent = 'No se pudo acceder a cámaras (permiso denegado o no disponible).';
+    statusEl.textContent = 'No se pudo acceder a cÃ¡maras (permiso denegado o no disponible).';
     statusEl.style.color = '#b00020';
     return;
   }
@@ -1667,7 +1663,7 @@ async function initQrScanner(){
   btnStart.addEventListener('click', async () => {
     resultEl.innerHTML = '';
     statusEl.style.color = '';
-    statusEl.textContent = 'Iniciando cámara...';
+    statusEl.textContent = 'Iniciando cÃ¡mara...';
 
     // evita doble start
     if (__qrScanner) {
@@ -1686,13 +1682,13 @@ async function initQrScanner(){
         cameraId,
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
-          // ✅ detectó QR
+          // âœ… detectÃ³ QR
           statusEl.textContent = 'QR detectado. Validando...';
 
           // evitar leer 20 veces el mismo QR
           await detenerScannerSilencioso();
 
-          // acá validamos en backend
+          // acÃ¡ validamos en backend
           await validarTokenQR(decodedText);
         },
         () => {
@@ -1700,11 +1696,11 @@ async function initQrScanner(){
         }
       );
 
-      statusEl.textContent = 'Cámara activa. Apuntá al QR...';
+      statusEl.textContent = 'CÃ¡mara activa. ApuntÃ¡ al QR...';
     } catch (e) {
       btnStart.disabled = false;
       btnStop.disabled = true;
-      statusEl.textContent = 'Error iniciando cámara: ' + (e?.message || e);
+      statusEl.textContent = 'Error iniciando cÃ¡mara: ' + (e?.message || e);
       statusEl.style.color = '#b00020';
     }
   });
@@ -1732,8 +1728,8 @@ async function initQrScanner(){
   resultEl.innerHTML = '';
 
   try {
-    // ✅ NUEVO: un solo endpoint que maneja 1er/2do escaneo
-    const res = await fetch('/api/qr_scan.php', {
+    // âœ… NUEVO: un solo endpoint que maneja 1er/2do escaneo
+    const res = await fetch(`${BASE}/api/qr_scan.php`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       credentials: 'include',
@@ -1743,13 +1739,13 @@ async function initQrScanner(){
     const data = await res.json().catch(()=> ({}));
     if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo procesar el QR');
 
-    // 1) Primer escaneo: SOLO info (remera sí/no)
+    // 1) Primer escaneo: SOLO info (remera sÃ­/no)
     if (data.step === 'INFO') {
-      statusEl.textContent = 'Primer escaneo ✅';
+      statusEl.textContent = 'Primer escaneo âœ…';
 
       resultEl.innerHTML = `
         <p style="margin:0; font-weight:700">${esc(data.message)}</p>
-        <p style="margin:8px 0 0 0; opacity:.8">Escaneá nuevamente para validar retiro de kit (y remera si corresponde).</p>
+        <p style="margin:8px 0 0 0; opacity:.8">EscaneÃ¡ nuevamente para validar retiro de kit (y remera si corresponde).</p>
         <div style="margin-top:12px">
           <button id="btnScanAgain" class="btn-mini">Escanear otro</button>
           <button id="btnVerFicha" class="btn-mini">Ver ficha</button>
@@ -1770,9 +1766,9 @@ async function initQrScanner(){
       return;
     }
 
-    // 2) Segundo escaneo: VALIDÓ retiro (kit + remera si corresponde)
+    // 2) Segundo escaneo: VALIDÃ“ retiro (kit + remera si corresponde)
     if (data.step === 'VALIDADO') {
-      statusEl.textContent = 'Retiro validado ✅';
+      statusEl.textContent = 'Retiro validado âœ…';
       // renderiza el detalle actualizado
       renderDetalleInscripcion(data.item);
       return;
@@ -1780,7 +1776,7 @@ async function initQrScanner(){
 
     // 3) Ya estaba validado antes
     if (data.step === 'YA_VALIDADO') {
-      statusEl.textContent = 'Ya validado ✅';
+      statusEl.textContent = 'Ya validado âœ…';
 
       resultEl.innerHTML = `
         <p style="margin:0; color:#0a7a2f"><strong>${esc(data.message)}</strong></p>

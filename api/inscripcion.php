@@ -233,9 +233,7 @@ if (!$es_postman) {
         throw new Exception("Error: No se pudo generar la imagen QR temporal.");
     }
 
-    // ==========================================
-    // ==========================================
-// 7. EMAIL: ENCOLAR (NO ENVIAR EN LÍNEA)
+   // 7. EMAIL: ENCOLAR (NO ENVIAR EN LÍNEA)
 // ==========================================
 $email_enqueued = false;
 
@@ -247,32 +245,20 @@ try {
         throw new Exception('Email vacío - no se puede encolar');
     }
 
-    // Guardamos todo lo necesario para reconstruir el email 1:1 en el worker
-    $payload = [
-        'nombre' => $input['nombre'] ?? '',
-        'dni' => $input['dni'] ?? '',
-        'email' => $toEmail,
-        'carrera' => $input['carrera'] ?? '',
-        'fecha_nacimiento' => $input['fecha_nacimiento'] ?? '',
-        'talle_remera' => $input['talle_remera'] ?? '',
-        'cobertura_medica' => $input['cobertura_medica'] ?? '',
-        'numero_afiliado' => $input['numero_afiliado'] ?? '',
-        'telefono_emergencia' => $input['telefono_emergencia'] ?? '',
-        'remera_asignada' => (int)$remera_asignada,
-
-        // Datos “derivados” que usabas en el HTML
-        'numero_corredor' => (int)$id
-    ];
-    $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE);
+    // Generar token para QR (lo usa el worker luego)
+    $qr_token = qr_encrypt_payload([
+        "id"  => (int)$id,
+        "dni" => $input["dni"] ?? "",
+    ]);
 
     log_insc("Email: encolando", ["to" => $toEmail, "id" => $id]);
 
     $stQ = $conexion->prepare("
         INSERT INTO email_queue
           (inscripcion_id, to_email, to_name, qr_token, carrera, talle_remera, remera_asignada,
-           payload_json, status, attempts, last_error, next_retry_at, updated_at)
+           status, attempts, last_error, next_retry_at, updated_at)
         VALUES
-          (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, NULL, NOW(), NOW())
+          (?, ?, ?, ?, ?, ?, ?, 'pending', 0, NULL, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
           to_email=VALUES(to_email),
           to_name=VALUES(to_name),
@@ -280,7 +266,6 @@ try {
           carrera=VALUES(carrera),
           talle_remera=VALUES(talle_remera),
           remera_asignada=VALUES(remera_asignada),
-          payload_json=VALUES(payload_json),
           status='pending',
           attempts=0,
           last_error=NULL,
@@ -291,16 +276,16 @@ try {
     $carrera = $input['carrera'] ?? '';
     $talle   = $input['talle_remera'] ?? null;
 
+    // 7 placeholders => i s s s s s i
     $stQ->bind_param(
-        "isssssiss",
+        "isssssi",
         $id,
         $toEmail,
         $toName,
         $qr_token,
         $carrera,
         $talle,
-        $remera_asignada,
-        $payloadJson
+        $remera_asignada
     );
 
     $stQ->execute();

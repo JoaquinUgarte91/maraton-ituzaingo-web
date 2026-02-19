@@ -13,7 +13,7 @@ if ($username === '' || $password === '') {
   exit;
 }
 
-// Traemos role y scope_kit también
+// Traemos role y scope_kit tambiÃ©n
 $stmt = $conexion->prepare("SELECT id, username, password_hash, role, scope_kit, is_active FROM admins WHERE username = ? LIMIT 1");
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -26,17 +26,17 @@ if (
   !password_verify($password, $admin['password_hash'])
 ) {
   http_response_code(401);
-  echo json_encode(['ok' => false, 'message' => 'Usuario o contraseña incorrectos']);
+  echo json_encode(['ok' => false, 'message' => 'Usuario o contraseÃ±a incorrectos']);
   exit;
 }
 
 session_regenerate_id(true);
 
-// Sesión base
+// SesiÃ³n base
 $_SESSION['admin_id'] = (int)$admin['id'];
 $_SESSION['admin_username'] = $admin['username'];
 
-// ✅ Sesión para permisos
+// âœ… SesiÃ³n para permisos
 $_SESSION['admin_role'] = $admin['role'];                 // admin_total | admin_visualizador | admin_externo
 $_SESSION['admin_scope_kit'] = $admin['scope_kit'] ?? null; // null o '10k'
 

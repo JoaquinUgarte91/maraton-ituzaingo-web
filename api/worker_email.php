@@ -1,18 +1,21 @@
 <?php
 // worker_email.php - procesa la cola email_queue con rate limit y retry
 
-require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/includes/qr_crypto.php';
-require_once __DIR__ . '/includes/phpqrcode/qrlib.php';
-require_once __DIR__ . '/includes/email_config.php';
-require_once __DIR__ . '/includes/PHPMailer/PHPMailer.php';
-require_once __DIR__ . '/includes/PHPMailer/SMTP.php';
-require_once __DIR__ . '/includes/PHPMailer/Exception.php';
+$ROOT = dirname(__DIR__); // => public_html
+
+require_once $ROOT . '/includes/db.php';
+require_once $ROOT . '/includes/qr_crypto.php';
+require_once $ROOT . '/includes/phpqrcode/qrlib.php';
+require_once $ROOT . '/includes/email_config.php';
+require_once $ROOT . '/includes/PHPMailer/PHPMailer.php';
+require_once $ROOT . '/includes/PHPMailer/SMTP.php';
+require_once $ROOT . '/includes/PHPMailer/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 
 date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 
 // ===== CONFIG =====
 $MAX_PER_RUN = 30;          // cuántos emails manda por corrida

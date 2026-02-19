@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorBox = document.getElementById('error-message');
 
   if (!form) {
-    console.error('No se encontró #login-form');
+    console.error('No se encontrÃ³ #login-form');
     return;
   }
 
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = document.getElementById('password').value;
 
     if (!username || !password) {
-      errorBox.textContent = 'Ingresá usuario y contraseña';
+      errorBox.textContent = 'IngresÃ¡ usuario y contraseÃ±a';
       return;
     }
 
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('password', password);
 
     try {
-      const res = await fetch('/api/login.php', {
+      const res = await fetch('/Maraton/api/login.php', {
         method: 'POST',
         body: formData,
         credentials: 'include'
@@ -33,16 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        errorBox.textContent = data.message || 'Usuario o contraseña incorrectos';
+        errorBox.textContent = data.message || 'Usuario o contraseÃ±a incorrectos';
         return;
       }
 
-      // ✅ Login correcto → panel
+      // âœ… Login correcto â†’ panel
       window.location.href = './inicio.html';
 
     } catch (err) {
       console.error(err);
-      errorBox.textContent = 'Error de conexión con el servidor';
+      errorBox.textContent = 'Error de conexiÃ³n con el servidor';
     }
   });
 });
